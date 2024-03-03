@@ -1,0 +1,5 @@
+# WaypointEnqueueService.srv
+geometry_msgs/PoseStamped[] poses
+---
+bool success  # indicate success or failure
+string message  # optional message, e.g., error message

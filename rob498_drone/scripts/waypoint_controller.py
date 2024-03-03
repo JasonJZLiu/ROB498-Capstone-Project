@@ -8,16 +8,11 @@ from mavros_msgs.msg import State
 from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
 
 from configs import Configs
-
+from rob498_drone.srv import WaypointEnqueueService, WaypointEnqueueServiceResponse
 
 
 class WaypointController:
     def __init__(self):
-        # a queue of PoseStamped waypoint
-        self.waypoint_queue = list()
-
-        self.current_pose = PoseStamped()
-
         # subscribe to the current mavros state
         self.mavros_state = State()
         self.mavros_state_sub = rospy.Subscriber("mavros/state", State, callback=self.mavros_state_callback)
@@ -26,9 +21,20 @@ class WaypointController:
         self.position_pub = rospy.Publisher("mavros/setpoint_position/local", PoseStamped, queue_size=10)
 
         # subscriber for drone pose
+        self.current_pose = PoseStamped()
         self.initial_pose = rospy.wait_for_message("mavros/local_position/pose", PoseStamped, timeout=30)
         self.pose_sub = rospy.Subscriber("mavros/local_position/pose", PoseStamped, callback=self.pose_callback)
 
+        self._setup_mavros_states()
+
+        # a queue of PoseStamped waypoint
+        self.waypoint_queue = list()
+        self._setup_waypoint_srvs()
+
+        return
+
+
+    def _setup_mavros_states(self):
         # client for checking and setting the arming state of the drone
         rospy.wait_for_service("/mavros/cmd/arming")
         self.mavros_arming_client = rospy.ServiceProxy("mavros/cmd/arming", CommandBool)
@@ -44,7 +50,6 @@ class WaypointController:
         while(not rospy.is_shutdown() and not self.mavros_state.connected):
             self.rate.sleep()
 
-
         # must start streaming waypoints before entering offboard mode
         for i in range(100):
             if(rospy.is_shutdown()):
@@ -52,7 +57,6 @@ class WaypointController:
             self.position_pub.publish(self.initial_pose)
             self.rate.sleep()
     
-
         # set drone mode to offboard
         offb_set_mode = SetModeRequest()
         offb_set_mode.custom_mode = "OFFBOARD"
@@ -69,10 +73,9 @@ class WaypointController:
                 rospy.loginfo("Drone armed")
             else:
                 raise rospy.ROSException("Failed to arm drone automatically.")
-            
+
         return
-            
-        
+    
 
     def mavros_state_callback(self, state):
         self.mavros_state = state
@@ -81,6 +84,21 @@ class WaypointController:
     def pose_callback(self, pose_stamped):
         self.current_pose = pose_stamped
 
+
+
+
+    def _setup_waypoint_srvs(self):
+        s = rospy.Service('waypoint/enqueue', WaypointEnqueueService, self.handle_waypoint_enqueue_srv)
+    
+
+    def handle_waypoint_enqueue_srv(self, req):
+        print(req.poses)
+        # self.waypoint_queue += req.poses
+        return WaypointEnqueueServiceResponse(success=True, message="Waypoint Enqueue Processed successfully")
+
+
+
+    
 
 
     def run(self):
