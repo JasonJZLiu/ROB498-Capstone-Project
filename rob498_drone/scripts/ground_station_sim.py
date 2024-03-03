@@ -23,7 +23,7 @@ class GroundStationSim:
             print(f"Service call failed: {e}")
         
     def run(self):
-        while True:
+        while not rospy.is_shutdown():
             print("1: Launch | 2: Test | 3: Land | 4: Abort")
 
             key = input()
