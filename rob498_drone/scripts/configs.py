@@ -4,4 +4,5 @@ class Configs:
     team_id = '02'
     drone_base_link_name = "iris_depth_camera::iris::base_link"
 
-    waypoint_reached_tol = 0.1
+    waypoint_pos_tol = 0.05
+    waypoint_rot_tol = 0.05

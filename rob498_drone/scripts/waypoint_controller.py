@@ -96,6 +96,11 @@ class WaypointController:
         take_off_pose.pose.position.x = 0
         take_off_pose.pose.position.y = 0
         take_off_pose.pose.position.z = 1.5
+        take_off_pose.pose.orientation.x = 0
+        take_off_pose.pose.orientation.y = 0
+        take_off_pose.pose.orientation.z = 0
+        take_off_pose.pose.orientation.w = 1.0
+
 
         # must start streaming waypoints before entering OFFBOARD mode
         for i in range(20):
@@ -132,6 +137,10 @@ class WaypointController:
         land_pose.pose.position.x = self.current_pose.pose.position.x
         land_pose.pose.position.y = self.current_pose.pose.position.y
         land_pose.pose.position.z = self.land_height
+        land_pose.pose.orientation.x = 0
+        land_pose.pose.orientation.y = 0
+        land_pose.pose.orientation.z = 0
+        land_pose.pose.orientation.w = 1.0
 
         if len(self.waypoint_queue) == 0:
             rospy.loginfo("Landing drone.")
@@ -140,7 +149,6 @@ class WaypointController:
                 if self.current_pose.pose.position.z < self.land_height + 0.1:
                     break
                 self.position_pub.publish(self.current_waypoint)
-                print(self.land_height, self.current_pose.pose.position.z)
                 self.rate.sleep()
                 
             self.has_taken_off = False
@@ -160,8 +168,14 @@ class WaypointController:
                 self.rate.sleep()
                 continue
             
-            # TODO: implement pose_error
-            if pose_error(self.current_pose, self.current_waypoint) < Configs.waypoint_reached_tol:
+            pos_error, rot_error = pose_error(
+                self.current_pose.pose, 
+                self.current_waypoint.pose, 
+                full_pose=True,
+            )
+            
+            print(pos_error, rot_error)
+            if pos_error < Configs.waypoint_pos_tol and rot_error < Configs.waypoint_rot_tol:
                 rospy.loginfo("Current waypoint reached.") 
                 if len(self.waypoint_queue) > 0:
                     self.current_waypoint = self.waypoint_queue.pop(0)
