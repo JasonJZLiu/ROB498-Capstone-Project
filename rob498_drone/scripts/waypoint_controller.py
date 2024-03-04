@@ -25,7 +25,7 @@ class WaypointController:
 
         # subscriber for drone pose
         self.current_pose = PoseStamped()
-        self.initial_pose = rospy.wait_for_message("mavros/local_position/pose", PoseStamped, timeout=30)
+        self.initial_pose = rospy.wait_for_message("mavros/local_position/pose", PoseStamped)
         self.land_height = self.initial_pose.pose.position.z
         self.pose_sub = rospy.Subscriber("mavros/local_position/pose", PoseStamped, callback=self._pose_callback)
 

@@ -16,7 +16,7 @@ class ViconSim:
 
         # wait until gazebo is fully loaded
         try:
-            rospy.wait_for_service('/gazebo/set_model_state', timeout=30)
+            rospy.wait_for_service('/gazebo/set_model_state')
         except rospy.ROSException as e:
             rospy.logerr("Timeout waiting for /gazebo/set_model_state service.")
 

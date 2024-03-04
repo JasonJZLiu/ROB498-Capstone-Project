@@ -11,7 +11,7 @@ class ViconBridge:
     def __init__(self):
         # wait until we receive vicon data
         try:
-            rospy.wait_for_message("vicon/ROB498_Drone/ROB498_Drone", TransformStamped, timeout=30)
+            rospy.wait_for_message("vicon/ROB498_Drone/ROB498_Drone", TransformStamped)
         except rospy.ROSException as e:
             rospy.logerr("Timeout waiting for vicon/ROB498_Drone/ROB498_Drone.")
 
