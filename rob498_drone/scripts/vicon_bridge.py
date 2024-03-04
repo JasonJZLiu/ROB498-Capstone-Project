@@ -24,8 +24,8 @@ class ViconBridge:
     def vicon_sub_callback(self, transform_stamped):
         odom = transform_stamped_to_odometry(
             transform_stamped=transform_stamped,
-            frame_id = "odom",
-            child_frame_id = "base_link",
+            frame_id="odom",
+            child_frame_id="base_link",
         )
         self.mavros_odometry_pub.publish(odom)
      

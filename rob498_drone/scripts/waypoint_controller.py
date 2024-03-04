@@ -11,8 +11,6 @@ from configs import Configs
 from utils import pose_error
 from rob498_drone.srv import WaypointEnqueueService, WaypointEnqueueServiceResponse
 
-import copy
-
 
 class WaypointController:
     has_taken_off = False
@@ -39,7 +37,6 @@ class WaypointController:
         self.setup_waypoint_srvs()
 
         return
-        
 
 
     def setup_mavros_states(self):
@@ -59,7 +56,6 @@ class WaypointController:
             self.rate.sleep()
         return
     
-    
 
     def _mavros_state_callback(self, state):
         self.mavros_state = state
@@ -69,14 +65,12 @@ class WaypointController:
         self.current_pose = pose_stamped
 
 
-
-
     def setup_waypoint_srvs(self):
         # expose waypoint queue such that other nodes can use it 
         rospy.Service("waypoint/enqueue", WaypointEnqueueService, self._handle_waypoint_enqueue_srv)
         rospy.Service("waypoint/clear", Empty, self._handle_waypoint_clear_srv)
 
-        # set up takeoff, land, and abort commands
+        # set up takeoff, and, land commands
         rospy.Service("waypoint/takeoff", Empty, self._handle_takeoff_srv)
         rospy.Service("waypoint/land", Empty, self._handle_land_srv)
 
@@ -100,7 +94,6 @@ class WaypointController:
         take_off_pose.pose.orientation.y = 0
         take_off_pose.pose.orientation.z = 0
         take_off_pose.pose.orientation.w = 1.0
-
 
         # must start streaming waypoints before entering OFFBOARD mode
         for i in range(20):
@@ -159,10 +152,7 @@ class WaypointController:
         return EmptyResponse()
     
 
-
-
     def run(self):
-        last_status_check_time = rospy.Time.now()
         while(not rospy.is_shutdown()):
             if self.has_taken_off == False:
                 self.rate.sleep()
@@ -174,14 +164,12 @@ class WaypointController:
                 full_pose=True,
             )
             
-            print(pos_error, rot_error)
             if pos_error < Configs.waypoint_pos_tol and rot_error < Configs.waypoint_rot_tol:
                 rospy.loginfo("Current waypoint reached.") 
                 if len(self.waypoint_queue) > 0:
                     self.current_waypoint = self.waypoint_queue.pop(0)
                     rospy.loginfo("Setting the next waypoint.")
-
-                
+ 
             self.position_pub.publish(self.current_waypoint)
             self.rate.sleep()
             

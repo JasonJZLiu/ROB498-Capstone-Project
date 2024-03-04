@@ -28,7 +28,6 @@ class Task2Vicon:
         srv_abort = rospy.Service(name + '/comm/abort', Empty, self._handle_abort_srv)
 
         
-
     def _handle_launch_srv(self, req):
         self.waypoint_takeoff_client()
         return EmptyResponse()
@@ -46,10 +45,6 @@ class Task2Vicon:
     def _handle_abort_srv(self, req):
         exit()
         return EmptyResponse()
-
-
-
-
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@ import rospy
 from std_srvs.srv import Empty
 from configs import Configs
 
+
 class GroundStationSim:
     def __init__(self):
         # wait for the services to become available
@@ -22,8 +23,9 @@ class GroundStationSim:
         except rospy.ServiceException as e:
             print(f"Service call failed: {e}")
         
+        
     def run(self):
-        while not rospy.is_shutdown():
+        while (not rospy.is_shutdown()):
             print("1: Launch | 2: Test | 3: Land | 4: Abort")
 
             key = input()
