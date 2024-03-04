@@ -9,7 +9,6 @@ from rob498_drone.srv import WaypointEnqueueService
 from waypoint_controller import WaypointController
 
 
-
 class Task2Vicon:
     def __init__(self):
         rospy.wait_for_service("waypoint/enqueue")

@@ -138,7 +138,7 @@ class WaypointController:
         if len(self.waypoint_queue) == 0:
             rospy.loginfo("Landing drone.")
             self.current_waypoint = land_pose
-            while(not rospy.is_shutdown()):
+            while(not rospy.is_shutdown() or not self.mavros_state.armed):
                 if self.current_pose.pose.position.z < self.land_height + 0.1:
                     break
                 self.position_pub.publish(self.current_waypoint)

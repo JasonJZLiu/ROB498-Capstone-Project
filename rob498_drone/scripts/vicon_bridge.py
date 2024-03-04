@@ -16,12 +16,12 @@ class ViconBridge:
             rospy.logerr("Timeout waiting for vicon/ROB498_Drone/ROB498_Drone.")
 
         self.vicon_sub = rospy.Subscriber(
-            "vicon/ROB498_Drone/ROB498_Drone", TransformStamped, callback=self.vicon_sub_callback
+            "vicon/ROB498_Drone/ROB498_Drone", TransformStamped, callback=self._vicon_sub_callback
         )
         self.mavros_odometry_pub = rospy.Publisher("mavros/odometry/out", Odometry, queue_size=10)
     
 
-    def vicon_sub_callback(self, transform_stamped):
+    def _vicon_sub_callback(self, transform_stamped):
         odom = transform_stamped_to_odometry(
             transform_stamped=transform_stamped,
             frame_id="odom",
