@@ -160,7 +160,7 @@ class WaypointController:
                 self.rate.sleep()
                 continue
             
-            #TODO: implement pose_error
+            # TODO: implement pose_error
             if pose_error(self.current_pose, self.current_waypoint) < Configs.waypoint_reached_tol:
                 rospy.loginfo("Current waypoint reached.") 
                 if len(self.waypoint_queue) > 0:
