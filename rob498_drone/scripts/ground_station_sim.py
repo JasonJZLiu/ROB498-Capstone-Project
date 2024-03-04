@@ -32,13 +32,13 @@ class GroundStationSim:
                 self.srv_launch_client()
                 print("Launch request sent successfully.")
             elif key == '2':
-                self.srv_launch_client()
+                self.srv_test_client()
                 print("Test request sent successfully.")
             elif key == '3':
-                self.srv_launch_client()
+                self.srv_land_client()
                 print("Land request sent successfully.")
             elif key == '4':
-                self.srv_launch_client()
+                self.srv_abort_client()
                 print("Abort request sent successfully.")
             else:
                 print("Invalid input")
