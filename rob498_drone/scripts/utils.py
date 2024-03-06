@@ -26,6 +26,24 @@ def pose_to_transform_stamped(pose: Pose, frame_id="parent_frame", child_frame_i
     return transform_stamped
 
 
+# def transform_stamped_to_pose_stamped(tran: Pose, frame_id="parent_frame", child_frame_id="child_frame"):
+#     transform_stamped = TransformStamped()
+#     transform_stamped.header.stamp = rospy.Time.now()
+#     transform_stamped.header.frame_id = frame_id
+#     transform_stamped.child_frame_id = child_frame_id
+
+#     transform_stamped.transform.translation.x = pose.position.x
+#     transform_stamped.transform.translation.y = pose.position.y
+#     transform_stamped.transform.translation.z = pose.position.z
+
+#     transform_stamped.transform.rotation.x = pose.orientation.x
+#     transform_stamped.transform.rotation.y = pose.orientation.y
+#     transform_stamped.transform.rotation.z = pose.orientation.z
+#     transform_stamped.transform.rotation.w = pose.orientation.w
+
+#     return transform_stamped
+
+
 def transform_stamped_to_odometry(transform_stamped: TransformStamped, frame_id, child_frame_id):
     odom = Odometry()
     odom.header = transform_stamped.header
