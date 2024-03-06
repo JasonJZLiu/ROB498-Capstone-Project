@@ -49,7 +49,7 @@ class WaypointController:
         self.mavros_set_mode_client = rospy.ServiceProxy("mavros/set_mode", SetMode)
 
         # setpoint publishing must be faster than 2Hz
-        self.rate = rospy.Rate(20)
+        self.rate = rospy.Rate(60)
 
         # wait for flight controller connection
         while(not rospy.is_shutdown() and not self.mavros_state.connected):
@@ -89,14 +89,14 @@ class WaypointController:
         take_off_pose = PoseStamped()
         take_off_pose.pose.position.x = 0
         take_off_pose.pose.position.y = 0
-        take_off_pose.pose.position.z = 1.5
+        take_off_pose.pose.position.z = 0.2 #1.5
         take_off_pose.pose.orientation.x = 0
         take_off_pose.pose.orientation.y = 0
         take_off_pose.pose.orientation.z = 0
         take_off_pose.pose.orientation.w = 1.0
 
         # must start streaming waypoints before entering OFFBOARD mode
-        for i in range(20):
+        for i in range(100):
             if(rospy.is_shutdown()):
                 break
             self.position_pub.publish(take_off_pose)
