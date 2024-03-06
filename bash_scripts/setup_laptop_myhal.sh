@@ -64,3 +64,4 @@ fi
 
 # Print the ROS_MASTER_URI for confirmation
 echo "ROS_MASTER_URI is set to $ROS_MASTER_URI"
+

@@ -41,19 +41,25 @@ class WaypointController:
 
     def setup_mavros_states(self):
         # client for checking and setting the arming state of the drone
+        rospy.loginfo("Waiting for /mavros/cmd/arming")
         rospy.wait_for_service("/mavros/cmd/arming")
         self.mavros_arming_client = rospy.ServiceProxy("mavros/cmd/arming", CommandBool)
+        rospy.loginfo("Finished waiting for /mavros/cmd/arming")
 
         # client for checking and setting the mode of the drone
+        rospy.loginfo("Waiting for /mavros/set_mode")
         rospy.wait_for_service("/mavros/set_mode")
         self.mavros_set_mode_client = rospy.ServiceProxy("mavros/set_mode", SetMode)
+        rospy.loginfo("Finished waiting for /mavros/set_mode")
 
         # setpoint publishing must be faster than 2Hz
         self.rate = rospy.Rate(60)
 
         # wait for flight controller connection
+        rospy.loginfo("Connecting...")
         while(not rospy.is_shutdown() and not self.mavros_state.connected):
             self.rate.sleep()
+        rospy.loginfo("Connected")
         return
     
 
