@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<launch>
+	<node pkg="rob498_drone" type="ground_station_sim.py" name="ground_station_sim_py" output="screen"/>
+	
+</launch>
