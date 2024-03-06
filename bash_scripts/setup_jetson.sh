@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Check if an IP address is provided as a command-line argument
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <ros-master-ip>"
+    exit 1
+fi
+
+
 # ----- Connect to eduroam wifi -----
 SSID=eduroam
 
@@ -48,11 +55,7 @@ echo "ROS_IP is set to $ROS_IP"
 
 # ----- Set up ROS Master to the laptop -----
 
-# Check if an IP address is provided as a command-line argument
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <ros-master-ip>"
-    exit 1
-fi
+
 
 # The first command-line argument is the ROS master's IP address
 ROS_MASTER_IP=$1

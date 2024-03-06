@@ -6,6 +6,7 @@
 	</include>
 
 
+
 	<node pkg="rob498_drone" type="waypoint_controller.py" name="waypoint_controller_py" required="true" output="screen"/>
 	<node pkg="rob498_drone" type="vicon_bridge.py" name="vicon_bridge_py" required="true" output="screen"/>
     <node pkg="rob498_drone" type="task_2_vicon.py" name="task_2_vicon_py" required="true" output="screen"/>
