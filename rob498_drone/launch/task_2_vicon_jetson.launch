@@ -5,6 +5,10 @@
 		<arg name="fcu_url" default="/dev/ttyUSB0:921600"/>
 	</include>
 
+	<!-- launch realsense VIO -->
+	<include file="$(find px4_realsense_bridge)/launch/bridge.launch" >
+  </include>
+
 
 
 	<node pkg="rob498_drone" type="waypoint_controller.py" name="waypoint_controller_py" required="true" output="screen"/>
