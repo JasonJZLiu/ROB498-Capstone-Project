@@ -2,7 +2,7 @@
 import rospy
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose, PoseStamped, TransformStamped
-from tf.transformations import quaternion_multiply, quaternion_inverse, euler_from_quaternion
+from tf.transformations import quaternion_multiply, quaternion_inverse, euler_from_quaternion, quaternion_matrix, quaternion_from_matrix
 
 import numpy as np
 from typing import Union
@@ -71,6 +71,53 @@ def transform_stamped_to_odometry(transform_stamped: TransformStamped, frame_id,
     odom.twist.covariance = [0] * 36
     
     return odom
+
+
+
+def transform_stamped_to_matrix(transform_stamped: TransformStamped):
+    transform = transform_stamped.transform
+
+    translation = transform.translation
+    rotation = transform.rotation
+
+    rot_matrix = quaternion_matrix([rotation.x, rotation.y, rotation.z, rotation.w])
+
+    transformation_matrix = np.identity(4)
+    transformation_matrix[0:3, 0:3] = rot_matrix[0:3, 0:3]
+    transformation_matrix[0:3, 3] = [translation.x, translation.y, translation.z]
+    return transformation_matrix
+
+
+def odom_to_matrix(odom: Odometry):
+    pose = odom.pose.pose
+
+    translation = pose.position
+    rotation = pose.orientation
+
+    rot_matrix = quaternion_matrix([rotation.x, rotation.y, rotation.z, rotation.w])
+
+    transformation_matrix = np.identity(4)
+    transformation_matrix[0:3, 0:3] = rot_matrix[0:3, 0:3]
+    transformation_matrix[0:3, 3] = [translation.x, translation.y, translation.z]
+    return transformation_matrix
+
+
+
+def matrix_to_pose(matrix):
+    position = matrix[0:3, 3]
+    quaternion = quaternion_from_matrix(matrix)
+
+    pose = Pose()
+    pose.position.x = position[0]
+    pose.position.y = position[1]
+    pose.position.z = position[2]
+    pose.orientation.x = quaternion[0]
+    pose.orientation.y = quaternion[1]
+    pose.orientation.z = quaternion[2]
+    pose.orientation.w = quaternion[3]
+
+    return pose
+
 
 
 def pose_to_drone_pose(pose: Pose):
