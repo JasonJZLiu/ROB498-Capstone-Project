@@ -69,6 +69,20 @@ def transform_stamped_to_matrix(transform_stamped: TransformStamped):
     return transformation_matrix
 
 
+def pose_stamped_to_matrix(pose_stamped: PoseStamped):
+    pose = pose_stamped.pose
+
+    translation = pose.position
+    rotation = pose.orientation
+
+    rot_matrix = quaternion_matrix([rotation.x, rotation.y, rotation.z, rotation.w])
+
+    transformation_matrix = np.identity(4)
+    transformation_matrix[0:3, 0:3] = rot_matrix[0:3, 0:3]
+    transformation_matrix[0:3, 3] = [translation.x, translation.y, translation.z]
+    return transformation_matrix
+
+
 def odom_to_matrix(odom: Odometry):
     pose = odom.pose.pose
 

@@ -5,7 +5,7 @@ from std_srvs.srv import Empty
 from configs import Configs
 
 
-class GroundStationSim:
+class Task2GroundStationSim:
     def __init__(self):
         # wait for the services to become available
         name = 'rob498_drone_' + Configs.team_id
@@ -47,7 +47,7 @@ class GroundStationSim:
 
 
 if __name__ == "__main__":
-    rospy.init_node('ground_station_sim')
-    ground_station_sim = GroundStationSim()
-    ground_station_sim.run()
+    rospy.init_node('task_2_ground_station_sim')
+    task_2_ground_station_sim = Task2GroundStationSim()
+    task_2_ground_station_sim.run()
     rospy.spin()

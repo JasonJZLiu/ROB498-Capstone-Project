@@ -8,6 +8,7 @@ from geometry_msgs.msg import TransformStamped
 from geometry_msgs.msg import PoseStamped
 
 from utils import *
+from rob498_drone.srv import WorldToOdomViconService, WorldToOdomViconServiceRequest
 
 
 class ViconBridge:
@@ -17,7 +18,7 @@ class ViconBridge:
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         self.tf_pub = tf2_ros.TransformBroadcaster()
 
-        self.rate = rospy.Rate(1)
+        self.rate = rospy.Rate(10)
 
         # wait until we receive vicon data
         try:
@@ -30,17 +31,30 @@ class ViconBridge:
             self.rate.sleep()
         self.vicon_T_base = transform_stamped_to_matrix(self.tf_buffer.lookup_transform('vicon', 'base_link', rospy.Time(0)))
 
+        self.calibrate_world_to_odom()
+        rospy.loginfo("ViconBridge: Finished calibrating!")
 
-        # TODO: wait for world to odom
-        
-        
+        while not self.tf_buffer.can_transform('odom', 'world', rospy.Time(0)):
+            rospy.loginfo("ViconBridge: Waiting for odom to world transform!")
+            self.rate.sleep()
         rospy.loginfo("ViconBridge: Finished waiting! Starting ViconBridge.")
+
 
         self.vicon_sub = rospy.Subscriber(
             "vicon/ROB498_Drone/ROB498_Drone", TransformStamped, callback=self._vicon_sub_callback
         )
         self.mavros_odometry_pub = rospy.Publisher("mavros/odometry/out", Odometry, queue_size=10)
 
+        
+    def calibrate_world_to_odom(self):
+        world_vicon = rospy.wait_for_message("vicon/ROB498_Drone/ROB498_Drone", TransformStamped)
+        rospy.wait_for_service("world_to_odom/vicon_calibrate")
+        try:
+            self.srv_vicon_calibrate_client = rospy.ServiceProxy("world_to_odom/vicon_calibrate", WorldToOdomViconService)
+        except rospy.ServiceException as e:
+            print(f"Service call failed: {e}")
+        self.srv_vicon_calibrate_client(world_vicon)
+        
 
     def _vicon_sub_callback(self, transform_stamped):
         # transform_stamped: world -> vicon

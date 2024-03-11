@@ -1,0 +1,5 @@
+# WorldToOdomViconService.srv
+geometry_msgs/TransformStamped world_vicon
+---
+bool success  # indicate success or failure
+string message  # optional message, e.g., error message

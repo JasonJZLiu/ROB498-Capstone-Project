@@ -12,11 +12,9 @@
 
 	<node pkg="tf" type="static_transform_publisher" name="tf_baseLink_vicon"
         args="0 0 0 0 0 0 base_link vicon 1000"/>
+	<node pkg="rob498_drone" type="world_to_odom.py" name="world_to_odom_py" required="true" output="screen"/>
 
-	<node pkg="tf" type="static_transform_publisher" name="tf_world_odom"
-        args="0 0 0 0 0 0 world odom 1000"/>
 
-	
     <node pkg="rob498_drone" type="vicon_sim.py" name="vicon_sim_py" required="true" output="screen"/>
 
 
@@ -24,7 +22,8 @@
 	<node pkg="rob498_drone" type="vicon_bridge.py" name="vicon_bridge_py" required="true" output="screen"/>
     <node pkg="rob498_drone" type="task_2.py" name="task_2_py" required="true" output="screen"/>
 
-    <node pkg="rob498_drone" type="ground_station_sim.py" name="ground_station_sim_py" output="screen"
+
+    <node pkg="rob498_drone" type="task_2_ground_station_sim.py" name="task_2_ground_station_sim_py" output="screen"
         launch-prefix="gnome-terminal --command" />
     
 </launch>
