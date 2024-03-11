@@ -20,6 +20,9 @@ class Task2:
         rospy.wait_for_service("waypoint/land")
         self.waypoint_land_client = rospy.ServiceProxy("waypoint/land", Empty)
 
+        rospy.wait_for_service("waypoint/abort")
+        self.waypoint_abort_client = rospy.ServiceProxy("waypoint/abort", Empty)
+
         name = 'rob498_drone_' + Configs.team_id
         srv_launch = rospy.Service(name + '/comm/launch', Empty, self._handle_launch_srv)
         srv_test = rospy.Service(name + '/comm/test', Empty, self._handle_test_srv)
@@ -42,7 +45,7 @@ class Task2:
 
 
     def _handle_abort_srv(self, req):
-        exit()
+        self.waypoint_abort_client()
         return EmptyResponse()
 
 

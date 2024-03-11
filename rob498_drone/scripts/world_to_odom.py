@@ -17,6 +17,7 @@ class WorldToOdom:
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         self.tf_pub = tf2_ros.TransformBroadcaster()
 
+        # initially assume world frame aligns with odom frame
         self.world_odom = TransformStamped()
         self.world_odom.header.stamp = rospy.Time.now()
         self.world_odom.header.frame_id = "world"
@@ -74,4 +75,3 @@ if __name__ == '__main__':
     rospy.init_node('world_to_odom')
     vicon_sim = WorldToOdom()
     vicon_sim.run()
-    rospy.spin()

@@ -76,9 +76,10 @@ class WaypointController:
         rospy.Service("waypoint/enqueue", WaypointEnqueueService, self._handle_waypoint_enqueue_srv)
         rospy.Service("waypoint/clear", Empty, self._handle_waypoint_clear_srv)
 
-        # set up takeoff, and, land commands
+        # set up takeoff, land, and abort commands
         rospy.Service("waypoint/takeoff", Empty, self._handle_takeoff_srv)
         rospy.Service("waypoint/land", Empty, self._handle_land_srv)
+        rospy.Service("waypoint/abort", Empty, self._handle_abort_srv)
 
 
     def _handle_waypoint_enqueue_srv(self, req):
@@ -156,6 +157,19 @@ class WaypointController:
             rospy.logwarn("Waypoint queue is not empty, cannot land!")
 
         return EmptyResponse()
+
+
+    def _handle_abort_srv(self, req):
+        # self.has_taken_off == False
+        # set drone mode to STABILIZED
+        set_mode = SetModeRequest()
+        set_mode.custom_mode = "STABILIZED"
+        if self.mavros_set_mode_client.call(set_mode).mode_sent == True:
+            rospy.loginfo("STABILIZED enabled.")
+        else:
+            # raise rospy.ROSException("Failed to set the drone mode to STABILIZED.")
+            rospy.logwarn("Failed to set the drone mode to STABILIZED.")
+
     
 
     def run(self):
