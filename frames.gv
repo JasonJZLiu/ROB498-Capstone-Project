@@ -1,0 +1,19 @@
+digraph G {
+"map" -> "map_ned"[label="Broadcaster: /mavros\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 17.632 sec old)\nBuffer length: 0.000 sec\n"];
+"odom" -> "odom_ned"[label="Broadcaster: /mavros\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 17.632 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "base_link_frd"[label="Broadcaster: /mavros\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 17.632 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "vicon"[label="Broadcaster: /vicon_sim_py\nAverage rate: 10.007 Hz\nMost recent transform: 18.212 ( -0.580 sec old)\nBuffer length: 5.496 sec\n"];
+"odom" -> "world"[label="Broadcaster: /tf_odom_world\nAverage rate: 1.250 Hz\nMost recent transform: 18.212 ( -0.580 sec old)\nBuffer length: 4.000 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 17.632"[ shape=plaintext ] ;
+ }->"map";
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 17.632"[ shape=plaintext ] ;
+ }->"odom";
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 17.632"[ shape=plaintext ] ;
+ }->"base_link";
+}

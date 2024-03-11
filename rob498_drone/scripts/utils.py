@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 import rospy
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Pose, PoseStamped, TransformStamped
+from geometry_msgs.msg import Pose, PoseStamped, Transform, TransformStamped
 from tf.transformations import quaternion_multiply, quaternion_inverse, euler_from_quaternion, quaternion_matrix, quaternion_from_matrix
 
 import numpy as np
 from typing import Union
 
 
-def pose_to_transform_stamped(pose: Pose, frame_id="parent_frame", child_frame_id="child_frame"):
+def pose_to_transform_stamped(pose: Pose, frame_id, child_frame_id):
     transform_stamped = TransformStamped()
     transform_stamped.header.stamp = rospy.Time.now()
     transform_stamped.header.frame_id = frame_id
@@ -24,24 +24,6 @@ def pose_to_transform_stamped(pose: Pose, frame_id="parent_frame", child_frame_i
     transform_stamped.transform.rotation.w = pose.orientation.w
 
     return transform_stamped
-
-
-# def transform_stamped_to_pose_stamped(tran: Pose, frame_id="parent_frame", child_frame_id="child_frame"):
-#     transform_stamped = TransformStamped()
-#     transform_stamped.header.stamp = rospy.Time.now()
-#     transform_stamped.header.frame_id = frame_id
-#     transform_stamped.child_frame_id = child_frame_id
-
-#     transform_stamped.transform.translation.x = pose.position.x
-#     transform_stamped.transform.translation.y = pose.position.y
-#     transform_stamped.transform.translation.z = pose.position.z
-
-#     transform_stamped.transform.rotation.x = pose.orientation.x
-#     transform_stamped.transform.rotation.y = pose.orientation.y
-#     transform_stamped.transform.rotation.z = pose.orientation.z
-#     transform_stamped.transform.rotation.w = pose.orientation.w
-
-#     return transform_stamped
 
 
 def transform_stamped_to_odometry(transform_stamped: TransformStamped, frame_id, child_frame_id):
@@ -71,7 +53,6 @@ def transform_stamped_to_odometry(transform_stamped: TransformStamped, frame_id,
     odom.twist.covariance = [0] * 36
     
     return odom
-
 
 
 def transform_stamped_to_matrix(transform_stamped: TransformStamped):
@@ -117,6 +98,22 @@ def matrix_to_pose(matrix):
     pose.orientation.w = quaternion[3]
 
     return pose
+
+
+def matrix_to_transform(matrix):
+    position = matrix[0:3, 3]
+    quaternion = quaternion_from_matrix(matrix)
+
+    transform = Transform()
+    transform.translation.x = position[0]
+    transform.translation.y = position[1]
+    transform.translation.z = position[2]
+    transform.rotation.x = quaternion[0]
+    transform.rotation.y = quaternion[1]
+    transform.rotation.z = quaternion[2]
+    transform.rotation.w = quaternion[3]
+
+    return transform
 
 
 
