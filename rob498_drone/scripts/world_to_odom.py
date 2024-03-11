@@ -35,7 +35,7 @@ class WorldToOdom:
             rospy.loginfo("WorldToOdom: Waiting for base_link to vicon transform!")
             rospy.sleep(0.1)
         self.vicon_T_base = transform_stamped_to_matrix(self.tf_buffer.lookup_transform('vicon', 'base_link', rospy.Time(0)))
-
+        
         try:
             rospy.loginfo("WorldToOdom: Waiting for mavros/local_position/pose")
             rospy.wait_for_message("mavros/local_position/pose", PoseStamped)
@@ -52,6 +52,7 @@ class WorldToOdom:
         self.world_T_vicon = transform_stamped_to_matrix(req.world_vicon)
 
         odom_T_base = pose_stamped_to_matrix(rospy.wait_for_message("mavros/local_position/pose", PoseStamped))
+        # world_T_base
         base_T_odom = np.linalg.inv(odom_T_base)
 
         self.world_T_odom = self.world_T_vicon @ self.vicon_T_base @ base_T_odom

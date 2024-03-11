@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import rospy
+import tf2_ros
 from std_srvs.srv import Empty, EmptyResponse
 from geometry_msgs.msg import PoseStamped
 
@@ -10,6 +11,8 @@ from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeReq
 from configs import Configs
 from utils import pose_error
 from rob498_drone.srv import WaypointEnqueueService, WaypointEnqueueServiceResponse
+
+from utils import *
 
 
 class WaypointController:
@@ -26,10 +29,13 @@ class WaypointController:
         # subscriber for drone pose
         self.current_pose = PoseStamped()
         self.initial_pose = rospy.wait_for_message("mavros/local_position/pose", PoseStamped)
+        # in odom frame
         self.land_height = self.initial_pose.pose.position.z
         self.pose_sub = rospy.Subscriber("mavros/local_position/pose", PoseStamped, callback=self._pose_callback)
 
         self.setup_mavros_states()
+
+        self.setup_transforms()        
 
         # a queue of PoseStamped waypoint
         self.waypoint_queue = list()
@@ -37,6 +43,23 @@ class WaypointController:
         self.setup_waypoint_srvs()
 
         return
+
+
+    def setup_transforms(self):
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
+        self.tf_pub = tf2_ros.TransformBroadcaster()
+
+        while not self.tf_buffer.can_transform('vicon', 'base_link', rospy.Time(0)):
+            rospy.loginfo("ViconBridge: Waiting for base_link to vicon transform!")
+            self.rate.sleep()
+        self.vicon_T_base = transform_stamped_to_matrix(self.tf_buffer.lookup_transform('vicon', 'base_link', rospy.Time(0)))
+
+        while not self.tf_buffer.can_transform('odom', 'world', rospy.Time(0)):
+            rospy.loginfo("ViconBridge: Waiting for odom to world transform!")
+            self.rate.sleep()
+        rospy.loginfo("ViconBridge: Finished waiting! Starting ViconBridge.")
+
 
 
     def setup_mavros_states(self):
@@ -92,15 +115,33 @@ class WaypointController:
         return EmptyResponse()
 
 
+    def transform_waypoint_target(self, world_vicon: PoseStamped):
+        # converts a waypoint target representing: world_T_vicon to
+        # a PoseStamped representing: odom_T_base_link
+        world_T_vicon = pose_stamped_to_matrix(world_vicon)
+        odom_T_world = transform_stamped_to_matrix(self.tf_buffer.lookup_transform('odom', 'world', rospy.Time(0)))
+        odom_T_base_link = odom_T_world @ world_T_vicon @ self.vicon_T_base
+
+        odom_base = PoseStamped()
+        odom_base.pose = matrix_to_pose(odom_T_base_link)
+
+        return odom_base
+
+
+
     def _handle_takeoff_srv(self, req):
+        # specified as a pose representing world_T_vicon
         take_off_pose = PoseStamped()
         take_off_pose.pose.position.x = 0
         take_off_pose.pose.position.y = 0
-        take_off_pose.pose.position.z = 1.5 - 0.13
+        take_off_pose.pose.position.z = 1.5
         take_off_pose.pose.orientation.x = 0
         take_off_pose.pose.orientation.y = 0
         take_off_pose.pose.orientation.z = 0
         take_off_pose.pose.orientation.w = 1.0
+
+        # now as a pose representing odom_T_base
+        take_off_pose_transformed = self.transform_waypoint_target(take_off_pose)
 
         # must start streaming waypoints before entering OFFBOARD mode
         for i in range(100):
@@ -126,7 +167,7 @@ class WaypointController:
             raise rospy.ROSException("Failed to arm drone.")
 
         rospy.loginfo("Launching drone.")
-        self.current_waypoint = take_off_pose
+        self.current_waypoint = take_off_pose_transformed
         self.has_taken_off = True
 
         return EmptyResponse()
@@ -137,16 +178,17 @@ class WaypointController:
         land_pose.pose.position.x = self.current_pose.pose.position.x
         land_pose.pose.position.y = self.current_pose.pose.position.y
         land_pose.pose.position.z = self.land_height
-        land_pose.pose.orientation.x = 0
-        land_pose.pose.orientation.y = 0
-        land_pose.pose.orientation.z = 0
-        land_pose.pose.orientation.w = 1.0
+        land_pose.pose.orientation.x = self.current_pose.pose.orientation.x
+        land_pose.pose.orientation.y = self.current_pose.pose.orientation.y
+        land_pose.pose.orientation.z = self.current_pose.pose.orientation.z
+        land_pose.pose.orientation.w = self.current_pose.pose.orientation.w
+
 
         if len(self.waypoint_queue) == 0:
             rospy.loginfo("Landing drone.")
             self.current_waypoint = land_pose
             while(not rospy.is_shutdown() or not self.mavros_state.armed):
-                if self.current_pose.pose.position.z < self.land_height + 0.1:
+                if self.current_pose.pose.position.z < self.land_height + 0.2:
                     break
                 self.position_pub.publish(self.current_waypoint)
                 self.rate.sleep()
