@@ -32,9 +32,6 @@ class ViconBridge:
 
 
 
-
-     
-
 if __name__ == '__main__':
     rospy.init_node('vicon_bridge')
     vicon_sim = ViconBridge()

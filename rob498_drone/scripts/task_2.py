@@ -9,7 +9,7 @@ from rob498_drone.srv import WaypointEnqueueService
 from waypoint_controller import WaypointController
 
 
-class Task2Vicon:
+class Task2:
     def __init__(self):
         rospy.wait_for_service("waypoint/enqueue")
         self.waypoint_enqueue_client = rospy.ServiceProxy("waypoint/enqueue", WaypointEnqueueService)
@@ -47,8 +47,8 @@ class Task2Vicon:
 
 
 if __name__ == '__main__':
-    rospy.init_node("task_2_vicon")
-    task_2_vicon = Task2Vicon()
+    rospy.init_node("task_2")
+    task_2 = Task2()
     rospy.spin()
 
 

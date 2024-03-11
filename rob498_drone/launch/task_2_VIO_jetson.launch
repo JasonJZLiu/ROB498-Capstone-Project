@@ -5,12 +5,16 @@
 		<arg name="fcu_url" default="/dev/ttyUSB0:921600"/>
 	</include>
 
+	<!-- launch realsense VIO -->
+	<include file="$(find px4_realsense_bridge)/launch/bridge.launch" >
+    </include>
+
 	<node pkg="tf" type="static_transform_publisher" name="tf_baseLink_vicon"
 		args="0.077 0 0 0 0 0 base_link vicon 1000"/>
 
 
 	<node pkg="rob498_drone" type="waypoint_controller.py" name="waypoint_controller_py" required="true" output="screen"/>
-	<node pkg="rob498_drone" type="vicon_bridge.py" name="vicon_bridge_py" required="true" output="screen"/>
+	<node pkg="rob498_drone" type="rs_t265_bridge.py" name="rs_t265_bridge_py" required="true" output="screen"/>
     <node pkg="rob498_drone" type="task_2.py" name="task_2_py" required="true" output="screen"/>
 
 </launch>

@@ -4,7 +4,7 @@
   <node pkg="tf" type="static_transform_publisher" name="tf_baseLink_cameraPose"
         args="0.077 0 -0.085 0 1.5708 0 base_link camera_pose_frame 1000"/>
   
-  
+
   <!-- Launch static transform publishers -->
   <node pkg="tf" type="static_transform_publisher" name="tf_odom_cameraOdom"
         args="0 0 0 0 0 0 odom camera_odom_frame 1000"/>

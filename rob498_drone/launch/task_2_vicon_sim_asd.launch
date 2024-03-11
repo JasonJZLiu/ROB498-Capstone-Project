@@ -1,13 +1,10 @@
 <?xml version="1.0"?>
 <launch>
-	<!-- Include the MAVROS node with SITL and Gazebo -->
-	<include file="$(find px4)/launch/mavros_posix_sitl.launch">
-			<arg name="world" default="$(find rob498_drone)/simulation/worlds/empty_world/empty.world"/>
-			<arg name="vehicle" default="iris_depth_camera"/>
+        <!-- Include the MAVROS node with SITL and Gazebo -->
+        <include file="$(find px4)/launch/mavros_posix_sitl.launch">
+                <arg name="world" default="$(find rob498_drone)/simulation/worlds/empty_world/empty.world"/>
+                <arg name="vehicle" default="iris_depth_camera"/>
 	</include>
-
-	<node pkg="tf" type="static_transform_publisher" name="tf_baseLink_vicon"
-        args="0 0 0 0 0 0 base_link vicon 1000"/>
 
 
 	<node pkg="rob498_drone" type="waypoint_controller.py" name="waypoint_controller_py" required="true" output="screen"/>
