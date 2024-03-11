@@ -50,12 +50,16 @@ class WorldToOdom:
 
     def _handle_vicon_calibrate_srv(self, req):
         self.world_T_vicon = transform_stamped_to_matrix(req.world_vicon)
-
         odom_T_base = pose_stamped_to_matrix(rospy.wait_for_message("mavros/local_position/pose", PoseStamped))
-        # world_T_base
         base_T_odom = np.linalg.inv(odom_T_base)
 
         self.world_T_odom = self.world_T_vicon @ self.vicon_T_base @ base_T_odom
+
+        # print(self.world_T_vicon)
+        # print(self.vicon_T_base)
+        # print(base_T_odom)
+        # print(self.world_T_odom)
+        # print("\n")
 
         self.world_odom.header.stamp = rospy.Time.now()
         self.world_odom.transform = matrix_to_transform(self.world_T_odom)

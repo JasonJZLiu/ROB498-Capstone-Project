@@ -31,7 +31,11 @@ class ViconBridge:
             self.rate.sleep()
         self.vicon_T_base = transform_stamped_to_matrix(self.tf_buffer.lookup_transform('vicon', 'base_link', rospy.Time(0)))
 
-        self.calibrate_world_to_odom()
+        # calibrate world_to_odom multiple times because on startup,
+        # mavros/local_position/pose could drift
+        for i in range(20):
+            self.calibrate_world_to_odom()
+            self.rate.sleep()
         rospy.loginfo("ViconBridge: Finished calibrating!")
 
         while not self.tf_buffer.can_transform('odom', 'world', rospy.Time(0)):

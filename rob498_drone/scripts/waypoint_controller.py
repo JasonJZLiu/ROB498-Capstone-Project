@@ -122,8 +122,17 @@ class WaypointController:
         odom_T_world = transform_stamped_to_matrix(self.tf_buffer.lookup_transform('odom', 'world', rospy.Time(0)))
         odom_T_base_link = odom_T_world @ world_T_vicon @ self.vicon_T_base
 
+        # print(odom_T_world)
+        # print(world_T_vicon)
+        # print(self.vicon_T_base)
+        # print(odom_T_base_link)
+
+
         odom_base = PoseStamped()
         odom_base.pose = matrix_to_pose(odom_T_base_link)
+
+        # print(odom_base.pose)
+        # assert 1==2
 
         return odom_base
 
