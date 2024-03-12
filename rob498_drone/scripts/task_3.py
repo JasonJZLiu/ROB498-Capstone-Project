@@ -47,10 +47,6 @@ class Task3:
             print(f"Service call failed: {e}")
         self.srv_vicon_calibrate_client(world_vicon)
 
-
-        # print(req.WaypointPoses)
-        # print(type(req.WaypointPoses))
-        # assert 1==2
         waypoint_list = list()
         for waypoint_pose in req.WaypointPoses.poses:
             waypoint_pose_stamped = PoseStamped()

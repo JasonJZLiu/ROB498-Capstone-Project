@@ -45,9 +45,9 @@ WAYPOINT_4.orientation.w = 1
 
 
 WAYPOINT_POSES = PoseArray()
-WAYPOINT_POSES.poses.append(WAYPOINT_1)
-WAYPOINT_POSES.poses.append(WAYPOINT_2)
-WAYPOINT_POSES.poses.append(WAYPOINT_3)
+# WAYPOINT_POSES.poses.append(WAYPOINT_1)
+# WAYPOINT_POSES.poses.append(WAYPOINT_2)
+# WAYPOINT_POSES.poses.append(WAYPOINT_3)
 WAYPOINT_POSES.poses.append(WAYPOINT_4)
 
 

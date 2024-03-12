@@ -105,6 +105,19 @@ class WaypointController:
         rospy.Service("waypoint/abort", Empty, self._handle_abort_srv)
 
 
+    def transform_waypoint_target(self, world_vicon: PoseStamped):
+        # converts a waypoint target representing: world_T_vicon to
+        # a PoseStamped representing: odom_T_base_link
+        world_T_vicon = pose_stamped_to_matrix(world_vicon)
+        odom_T_world = transform_stamped_to_matrix(self.tf_buffer.lookup_transform('odom', 'world', rospy.Time(0)))
+        odom_T_base_link = odom_T_world @ world_T_vicon @ self.vicon_T_base
+
+        odom_base = PoseStamped()
+        odom_base.header.frame_id = "odom"
+        odom_base.pose = matrix_to_pose(odom_T_base_link)
+        return odom_base
+
+
     def _handle_waypoint_enqueue_srv(self, req):
         self.waypoint_queue += [self.transform_waypoint_target(world_vicon_waypoint) for world_vicon_waypoint in req.poses]
         return WaypointEnqueueServiceResponse(success=True, message="Waypoint Enqueue Processed successfully")
@@ -113,29 +126,6 @@ class WaypointController:
     def _handle_waypoint_clear_srv(self, req):
         self.waypoint_queue = list()
         return EmptyResponse()
-
-
-    def transform_waypoint_target(self, world_vicon: PoseStamped):
-        # converts a waypoint target representing: world_T_vicon to
-        # a PoseStamped representing: odom_T_base_link
-        world_T_vicon = pose_stamped_to_matrix(world_vicon)
-        odom_T_world = transform_stamped_to_matrix(self.tf_buffer.lookup_transform('odom', 'world', rospy.Time(0)))
-        odom_T_base_link = odom_T_world @ world_T_vicon @ self.vicon_T_base
-
-        # print(odom_T_world)
-        # print(world_T_vicon)
-        # print(self.vicon_T_base)
-        # print(odom_T_base_link)
-
-
-        odom_base = PoseStamped()
-        odom_base.pose = matrix_to_pose(odom_T_base_link)
-
-        # print(odom_base.pose)
-        # assert 1==2
-
-        return odom_base
-
 
 
     def _handle_takeoff_srv(self, req):
@@ -156,7 +146,7 @@ class WaypointController:
         for i in range(100):
             if(rospy.is_shutdown()):
                 break
-            self.position_pub.publish(take_off_pose)
+            self.position_pub.publish(take_off_pose_transformed)
             self.rate.sleep()
     
         # set drone mode to OFFBOARD
@@ -184,6 +174,7 @@ class WaypointController:
 
     def _handle_land_srv(self, req):
         land_pose = PoseStamped()
+        land_pose.header.frame_id = "odom"
         land_pose.pose.position.x = self.current_pose.pose.position.x
         land_pose.pose.position.y = self.current_pose.pose.position.y
         land_pose.pose.position.z = self.land_height
@@ -191,7 +182,6 @@ class WaypointController:
         land_pose.pose.orientation.y = self.current_pose.pose.orientation.y
         land_pose.pose.orientation.z = self.current_pose.pose.orientation.z
         land_pose.pose.orientation.w = self.current_pose.pose.orientation.w
-
 
         if len(self.waypoint_queue) == 0:
             rospy.loginfo("Landing drone.")
