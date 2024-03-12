@@ -1,0 +1,6 @@
+# WorldToOdomViconService.srv
+geometry_msgs/PoseArray WaypointPoses
+geometry_msgs/TransformStamped ViconPose
+---
+bool success  # indicate success or failure
+string message  # optional message, e.g., error message

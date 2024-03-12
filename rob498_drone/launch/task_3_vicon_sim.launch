@@ -20,10 +20,10 @@
 
 	<node pkg="rob498_drone" type="waypoint_controller.py" name="waypoint_controller_py" required="true" output="screen"/>
 	<node pkg="rob498_drone" type="vicon_bridge.py" name="vicon_bridge_py" required="true" output="screen"/>
-    <node pkg="rob498_drone" type="task_2.py" name="task_2_py" required="true" output="screen"/>
+    <node pkg="rob498_drone" type="task_3.py" name="task_3_py" required="true" output="screen"/>
 
 
-    <node pkg="rob498_drone" type="task_2_ground_station_sim.py" name="task_2_ground_station_sim_py" output="screen"
+    <node pkg="rob498_drone" type="task_3_ground_station_sim.py" name="task_3_ground_station_sim_py" output="screen"
         launch-prefix="gnome-terminal --command" />
 	
 	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find rob498_drone)/visualization/simulation_vis.rviz" />

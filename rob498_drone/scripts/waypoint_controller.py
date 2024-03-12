@@ -58,7 +58,7 @@ class WaypointController:
         while not self.tf_buffer.can_transform('odom', 'world', rospy.Time(0)):
             rospy.loginfo("ViconBridge: Waiting for odom to world transform!")
             self.rate.sleep()
-        rospy.loginfo("ViconBridge: Finished waiting! Starting ViconBridge.")
+        rospy.loginfo("WaypointController: Finished waiting for transforms!")
 
 
 
@@ -106,7 +106,7 @@ class WaypointController:
 
 
     def _handle_waypoint_enqueue_srv(self, req):
-        self.waypoint_queue += req.poses
+        self.waypoint_queue += [self.transform_waypoint_target(world_vicon_waypoint) for world_vicon_waypoint in req.poses]
         return WaypointEnqueueServiceResponse(success=True, message="Waypoint Enqueue Processed successfully")
 
 

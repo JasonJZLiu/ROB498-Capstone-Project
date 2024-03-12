@@ -59,6 +59,7 @@ add_service_files(
   FILES
   WaypointEnqueueService.srv
   WorldToOdomViconService.srv
+  Task3TestService.srv
 )
 
 ## Generate actions in the 'action' folder
