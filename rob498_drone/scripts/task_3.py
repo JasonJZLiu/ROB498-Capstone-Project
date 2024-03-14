@@ -51,7 +51,7 @@ class Task3:
         for waypoint_pose in req.WaypointPoses.poses:
             waypoint_pose_stamped = PoseStamped()
             waypoint_pose_stamped.header.stamp = rospy.Time.now()
-            # waypoint_pose_stamped.header.frame_id = "vicon"
+            waypoint_pose_stamped.header.frame_id = "vicon"
             waypoint_pose_stamped.pose = waypoint_pose
             waypoint_list.append(waypoint_pose_stamped)
         
