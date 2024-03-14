@@ -8,18 +8,18 @@ from geometry_msgs.msg import PoseArray, Pose, TransformStamped
 from rob498_drone.srv import Task3TestService, Task3TestServiceRequest
 
 WAYPOINT_1 = Pose()
-WAYPOINT_1.position.x = 2.0
+WAYPOINT_1.position.x = 0.5
 WAYPOINT_1.position.y = 0.0
-WAYPOINT_1.position.z = 1.5
+WAYPOINT_1.position.z = 0.5
 WAYPOINT_1.orientation.x = 0
 WAYPOINT_1.orientation.y = 0
 WAYPOINT_1.orientation.z = 0
 WAYPOINT_1.orientation.w = 1
 
 WAYPOINT_2 = Pose()
-WAYPOINT_2.position.x = 2.0
-WAYPOINT_2.position.y = 2.0
-WAYPOINT_2.position.z = 1.5
+WAYPOINT_2.position.x = 0.5
+WAYPOINT_2.position.y = 0.5
+WAYPOINT_2.position.z = 0.5
 WAYPOINT_2.orientation.x = 0
 WAYPOINT_2.orientation.y = 0
 WAYPOINT_2.orientation.z = 0
@@ -27,8 +27,8 @@ WAYPOINT_2.orientation.w = 1
 
 WAYPOINT_3 = Pose()
 WAYPOINT_3.position.x = 0
-WAYPOINT_3.position.y = 2.0
-WAYPOINT_3.position.z = 1.5
+WAYPOINT_3.position.y = 0.5
+WAYPOINT_3.position.z = 0.5
 WAYPOINT_3.orientation.x = 0
 WAYPOINT_3.orientation.y = 0
 WAYPOINT_3.orientation.z = 0
@@ -37,7 +37,7 @@ WAYPOINT_3.orientation.w = 1
 WAYPOINT_4 = Pose()
 WAYPOINT_4.position.x = 0
 WAYPOINT_4.position.y = 0
-WAYPOINT_4.position.z = 1.5
+WAYPOINT_4.position.z = 0.5
 WAYPOINT_4.orientation.x = 0
 WAYPOINT_4.orientation.y = 0
 WAYPOINT_4.orientation.z = 0
