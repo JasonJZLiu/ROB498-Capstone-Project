@@ -170,17 +170,21 @@ class WaypointController:
 
         rospy.loginfo("Taking off drone.")
         self.current_waypoint = take_off_pose_transformed
-        while(not rospy.is_shutdown()):
-            # target - current
-            pos_error, rot_error, _, _ = pose_error(
-                self.current_pose.pose, self.current_waypoint.pose, full_pose=False,
-            )
-            if pos_error < Configs.waypoint_pos_tol and rot_error < Configs.waypoint_rot_tol:
-                self.has_taken_off = True
-                break
+        self.has_taken_off = True
+
+
+
+        # while(not rospy.is_shutdown()):
+        #     # target - current
+        #     pos_error, rot_error, _, _ = pose_error(
+        #         self.current_pose.pose, self.current_waypoint.pose, full_pose=False,
+        #     )
+        #     if pos_error < Configs.waypoint_pos_tol and rot_error < Configs.waypoint_rot_tol:
+        #         self.has_taken_off = True
+        #         break
         
-            self.position_pub.publish(self.current_waypoint)
-            self.rate.sleep()
+        #     self.position_pub.publish(self.current_waypoint)
+        #     self.rate.sleep()
 
         rospy.loginfo("Take off pose reached.")
         return EmptyResponse()
