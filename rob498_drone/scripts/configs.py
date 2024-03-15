@@ -6,3 +6,6 @@ class Configs:
     
     waypoint_pos_tol = 0.2 #0.05
     waypoint_rot_tol = 0.2 #0.05
+
+    waypoint_pos_delta = 0.4
+    waypoint_rot_delta = 0.1

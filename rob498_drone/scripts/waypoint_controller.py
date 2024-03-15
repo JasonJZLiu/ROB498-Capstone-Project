@@ -4,6 +4,7 @@ import rospy
 import tf2_ros
 from std_srvs.srv import Empty, EmptyResponse
 from geometry_msgs.msg import PoseStamped
+from tf.transformations import quaternion_from_euler, quaternion_multiply
 
 from mavros_msgs.msg import State
 from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest
@@ -11,6 +12,7 @@ from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeReq
 from configs import Configs
 from utils import pose_error
 from rob498_drone.srv import WaypointEnqueueService, WaypointEnqueueServiceResponse
+import copy
 
 from utils import *
 
@@ -91,6 +93,7 @@ class WaypointController:
 
 
     def _pose_callback(self, pose_stamped):
+        # in frame: map
         self.current_pose = pose_stamped
 
 
@@ -165,10 +168,21 @@ class WaypointController:
         else:
             raise rospy.ROSException("Failed to arm drone.")
 
-        rospy.loginfo("Launching drone.")
+        rospy.loginfo("Taking off drone.")
         self.current_waypoint = take_off_pose_transformed
-        self.has_taken_off = True
+        while(not rospy.is_shutdown()):
+            # target - current
+            pos_error, rot_error, _, _ = pose_error(
+                self.current_pose.pose, self.current_waypoint.pose, full_pose=False,
+            )
+            if pos_error < Configs.waypoint_pos_tol and rot_error < Configs.waypoint_rot_tol:
+                self.has_taken_off = True
+                break
+        
+            self.position_pub.publish(self.current_waypoint)
+            self.rate.sleep()
 
+        rospy.loginfo("Take off pose reached.")
         return EmptyResponse()
     
 
@@ -177,25 +191,22 @@ class WaypointController:
         land_pose.header.frame_id = "odom"
         land_pose.pose.position.x = self.current_pose.pose.position.x
         land_pose.pose.position.y = self.current_pose.pose.position.y
-        land_pose.pose.position.z = self.land_height
+        land_pose.pose.position.z = -0.1
         land_pose.pose.orientation.x = self.current_pose.pose.orientation.x
         land_pose.pose.orientation.y = self.current_pose.pose.orientation.y
         land_pose.pose.orientation.z = self.current_pose.pose.orientation.z
         land_pose.pose.orientation.w = self.current_pose.pose.orientation.w
 
-        if len(self.waypoint_queue) == 0:
-            rospy.loginfo("Landing drone.")
-            self.current_waypoint = land_pose
-            while(not rospy.is_shutdown() or not self.mavros_state.armed):
-                if self.current_pose.pose.position.z < self.land_height + 0.2:
-                    break
-                self.position_pub.publish(self.current_waypoint)
-                self.rate.sleep()
-                
-            self.has_taken_off = False
-            rospy.loginfo("Drone landed successfully.")            
-        else:
-            rospy.logwarn("Waypoint queue is not empty, cannot land!")
+        self.has_taken_off = False
+        rospy.loginfo("Landing drone.")
+        self.current_waypoint = land_pose
+        while(not rospy.is_shutdown() or not self.mavros_state.armed):
+            if self.current_pose.pose.position.z < self.land_height + 0.2:
+                break
+            self.position_pub.publish(self.current_waypoint)
+            self.rate.sleep()
+            
+        rospy.loginfo("Drone landed successfully.")  
 
         return EmptyResponse()
 
@@ -208,7 +219,6 @@ class WaypointController:
         if self.mavros_set_mode_client.call(set_mode).mode_sent == True:
             rospy.loginfo("STABILIZED enabled.")
         else:
-            # raise rospy.ROSException("Failed to set the drone mode to STABILIZED.")
             rospy.logwarn("Failed to set the drone mode to STABILIZED.")
 
     
@@ -219,10 +229,9 @@ class WaypointController:
                 self.rate.sleep()
                 continue
             
-            pos_error, rot_error = pose_error(
-                self.current_pose.pose, 
-                self.current_waypoint.pose, 
-                full_pose=True,
+            # target - current
+            pos_error, rot_error, pos_diff, rot_diff = pose_error(
+                self.current_pose.pose, self.current_waypoint.pose, full_pose=False,
             )
             
             if pos_error < Configs.waypoint_pos_tol and rot_error < Configs.waypoint_rot_tol:
@@ -230,8 +239,29 @@ class WaypointController:
                 if len(self.waypoint_queue) > 0:
                     self.current_waypoint = self.waypoint_queue.pop(0)
                     rospy.loginfo("Setting the next waypoint.")
- 
-            self.position_pub.publish(self.current_waypoint)
+            
+            # calculate sub_waypoint as current_pose + delta
+            if pos_error > Configs.waypoint_pos_delta:
+                pos_diff = pos_diff / pos_error * Configs.waypoint_pos_delta
+
+            if rot_error > Configs.waypoint_rot_delta:
+                rot_diff = rot_diff / rot_error * Configs.waypoint_rot_delta
+            curr_orientation = self.current_pose.pose.orientation
+            curr_pose_quat = [curr_orientation.x, curr_orientation.y, curr_orientation.z, curr_orientation.w]
+            rot_diff_quat = quaternion_from_euler(0, 0, rot_diff)
+            sub_waypoint_quat = quaternion_multiply(curr_pose_quat, rot_diff_quat)
+
+            current_sub_waypoint = copy.deepcopy(self.current_pose)
+            current_sub_waypoint.header.stamp = rospy.Time.now()
+            current_sub_waypoint.pose.position.x += pos_diff[0]
+            current_sub_waypoint.pose.position.y += pos_diff[1]
+            current_sub_waypoint.pose.position.z += pos_diff[2]
+            current_sub_waypoint.pose.orientation.x = sub_waypoint_quat[0]
+            current_sub_waypoint.pose.orientation.y = sub_waypoint_quat[1]
+            current_sub_waypoint.pose.orientation.z = sub_waypoint_quat[2]
+            current_sub_waypoint.pose.orientation.w = sub_waypoint_quat[3]
+
+            self.position_pub.publish(current_sub_waypoint)
             self.rate.sleep()
             
 
