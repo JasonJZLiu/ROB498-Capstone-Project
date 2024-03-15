@@ -198,6 +198,7 @@ class WaypointController:
         land_pose.pose.orientation.w = self.current_pose.pose.orientation.w
 
         self.has_taken_off = False
+        self.waypoint_queue = list()
         rospy.loginfo("Landing drone.")
         self.current_waypoint = land_pose
         while(not rospy.is_shutdown() or not self.mavros_state.armed):
