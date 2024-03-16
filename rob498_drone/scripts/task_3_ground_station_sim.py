@@ -10,48 +10,48 @@ from rob498_drone.srv import Task3TestService, Task3TestServiceRequest
 import numpy as np
 from tf.transformations import quaternion_from_euler
 
-# WAYPOINT_1 = Pose()
-# WAYPOINT_1.position.x = 2.0
-# WAYPOINT_1.position.y = 0.0
-# WAYPOINT_1.position.z = 1.5
-# WAYPOINT_1.orientation.x = 0
-# WAYPOINT_1.orientation.y = 0
-# WAYPOINT_1.orientation.z = 0.707
-# WAYPOINT_1.orientation.w = -0.707
+WAYPOINT_1 = Pose()
+WAYPOINT_1.position.x = 2.0
+WAYPOINT_1.position.y = 0.0
+WAYPOINT_1.position.z = 1.0
+WAYPOINT_1.orientation.x = 0
+WAYPOINT_1.orientation.y = 0
+WAYPOINT_1.orientation.z = 0.707
+WAYPOINT_1.orientation.w = 0.707
 
-# WAYPOINT_2 = Pose()
-# WAYPOINT_2.position.x = 2.0
-# WAYPOINT_2.position.y = 2.0
-# WAYPOINT_2.position.z = 1.5
-# WAYPOINT_2.orientation.x = 0
-# WAYPOINT_2.orientation.y = 0
-# WAYPOINT_2.orientation.z = 0
-# WAYPOINT_2.orientation.w = 1
+WAYPOINT_2 = Pose()
+WAYPOINT_2.position.x = 2.0
+WAYPOINT_2.position.y = 2.0
+WAYPOINT_2.position.z = 1.0
+WAYPOINT_2.orientation.x = 0
+WAYPOINT_2.orientation.y = 0
+WAYPOINT_2.orientation.z = 0
+WAYPOINT_2.orientation.w = 1
 
-# WAYPOINT_3 = Pose()
-# WAYPOINT_3.position.x = 0
-# WAYPOINT_3.position.y = 2.0
-# WAYPOINT_3.position.z = 1.5
-# WAYPOINT_3.orientation.x = 0
-# WAYPOINT_3.orientation.y = 0
-# WAYPOINT_3.orientation.z = 0
-# WAYPOINT_3.orientation.w = 1
+WAYPOINT_3 = Pose()
+WAYPOINT_3.position.x = 0
+WAYPOINT_3.position.y = 2.0
+WAYPOINT_3.position.z = 1.0
+WAYPOINT_3.orientation.x = 0
+WAYPOINT_3.orientation.y = 0
+WAYPOINT_3.orientation.z = 0.707
+WAYPOINT_3.orientation.w = -0.707
 
-# WAYPOINT_4 = Pose()
-# WAYPOINT_4.position.x = 0
-# WAYPOINT_4.position.y = 0
-# WAYPOINT_4.position.z = 1.5
-# WAYPOINT_4.orientation.x = 0
-# WAYPOINT_4.orientation.y = 0
-# WAYPOINT_4.orientation.z = 0
-# WAYPOINT_4.orientation.w = 1
+WAYPOINT_4 = Pose()
+WAYPOINT_4.position.x = 0
+WAYPOINT_4.position.y = 0
+WAYPOINT_4.position.z = 1.0
+WAYPOINT_4.orientation.x = 0
+WAYPOINT_4.orientation.y = 0
+WAYPOINT_4.orientation.z = 0
+WAYPOINT_4.orientation.w = 1
 
 
-# WAYPOINT_POSES = PoseArray()
-# WAYPOINT_POSES.poses.append(WAYPOINT_1)
-# # WAYPOINT_POSES.poses.append(WAYPOINT_2)
-# # WAYPOINT_POSES.poses.append(WAYPOINT_3)
-# # WAYPOINT_POSES.poses.append(WAYPOINT_4)
+WAYPOINT_POSES = PoseArray()
+WAYPOINT_POSES.poses.append(WAYPOINT_1)
+WAYPOINT_POSES.poses.append(WAYPOINT_2)
+WAYPOINT_POSES.poses.append(WAYPOINT_3)
+WAYPOINT_POSES.poses.append(WAYPOINT_4)
 
 
 
@@ -64,6 +64,14 @@ class Task3GroundStationSim:
         rospy.wait_for_service(name + '/comm/test')
         rospy.wait_for_service(name + '/comm/land')
         rospy.wait_for_service(name + '/comm/abort')
+
+        # wait until we receive vicon data
+        rospy.loginfo("Task3GroundStation: Waiting for vicon data.")
+        try:
+            rospy.wait_for_message("vicon/ROB498_Drone/ROB498_Drone", TransformStamped)
+        except rospy.ROSException as e:
+            rospy.logerr("Timeout waiting for vicon/ROB498_Drone/ROB498_Drone.")
+        rospy.loginfo("Task3GroundStation: Finished waiting for vicon data.")
 
         try:
             # create service proxies
@@ -112,7 +120,9 @@ class Task3GroundStationSim:
                     world_vicon = rospy.wait_for_message("vicon/ROB498_Drone/ROB498_Drone", TransformStamped)
                 except rospy.ROSException as e:
                     rospy.logerr("Timeout waiting for vicon/ROB498_Drone/ROB498_Drone.")
-                waypoint_pose_arr = self.generate_waypoints(num_waypoints=4)
+                # waypoint_pose_arr = self.generate_waypoints(num_waypoints=4)
+
+                waypoint_pose_arr = WAYPOINT_POSES
                 self.srv_test_client(waypoint_pose_arr, world_vicon)
                 print("Test request sent successfully.")
             elif key == '3':
