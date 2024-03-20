@@ -136,7 +136,8 @@ class WaypointController:
         take_off_pose = PoseStamped()
         take_off_pose.pose.position.x = 0
         take_off_pose.pose.position.y = 0
-        take_off_pose.pose.position.z = 1.5
+        # take_off_pose.pose.position.z = 1.5
+        take_off_pose.pose.position.z = 0.5
         take_off_pose.pose.orientation.x = 0
         take_off_pose.pose.orientation.y = 0
         take_off_pose.pose.orientation.z = 0
