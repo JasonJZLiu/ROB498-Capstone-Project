@@ -4,7 +4,6 @@ import rospy
 from std_srvs.srv import Empty
 from configs import Configs
 
-<<<<<<< HEAD
 from geometry_msgs.msg import PoseArray, Pose, TransformStamped
 from rob498_drone.srv import Task3TestService, Task3TestServiceRequest
 
@@ -51,9 +50,6 @@ WAYPOINT_POSES.poses.append(WAYPOINT_2)
 WAYPOINT_POSES.poses.append(WAYPOINT_3)
 WAYPOINT_POSES.poses.append(WAYPOINT_4)
 
-=======
-import numpy as np
->>>>>>> 8bf6adb2f70a0b5077a04bf0388f41f8f053ad74
 
 
 class Task3GroundStationSim:

@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-	
-	<node pkg="rob498_drone" type="task_2_ground_station_sim.py" name="task_2_ground_station_sim_py" output="screen"
-        launch-prefix="gnome-terminal --command" />
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find rob498_drone)/visualization/simulation_vis.rviz" />
-
-</launch>
