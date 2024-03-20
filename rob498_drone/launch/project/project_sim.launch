@@ -9,6 +9,32 @@
 		<arg name="y" default="0.2"/>
 	</include>
 
+
+	<!-- IMU Filter Madgwick Node -->
+    <node name="imu_filter_node" pkg="imu_filter_madgwick" type="imu_filter_node" output="screen">
+        <param name="use_mag" value="false"/>
+        <param name="publish_tf" value="false"/>
+        <param name="world_frame" value="enu"/>
+        <remap from="/imu/data_raw" to="/mavros/imu/data"/>
+        <remap from="/imu/data" to="/rtabmap/imu"/>
+    </node>
+
+    <!-- RTAB-Map Launch -->
+    <include file="$(find rtabmap_ros)/launch/rtabmap.launch">
+        <arg name="rtabmap_args" value="--delete_db_on_start --Optimizer/GravitySigma 0.3"/>
+        <arg name="depth_topic" value="/iris_depth_camera/camera/depth/image_raw"/>
+        <arg name="rgb_topic" value="/iris_depth_camera/camera/rgb/image_raw"/>
+        <arg name="camera_info_topic" value="/iris_depth_camera/camera/rgb/camera_info"/>
+        <arg name="approx_sync" value="false"/>
+        <arg name="wait_imu_to_init" value="true"/>
+        <arg name="imu_topic" value="/rtabmap/imu"/>
+    </include>
+
+
+
+
+
+
 	<node pkg="tf" type="static_transform_publisher" name="tf_world_map"
         args="0 0 0 0 0 0 odom map 1000"/>
 	<node pkg="tf" type="static_transform_publisher" name="tf_baseLink_vicon"
