@@ -102,7 +102,7 @@ Visualization Manager:
       Axes Length: 1
       Axes Radius: 0.10000000149011612
       Class: rviz/Pose
-      Color: 255; 25; 0
+      Color: 160; 25; 255
       Enabled: true
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
@@ -158,9 +158,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.575397253036499
+      Pitch: 0.4803973138332367
       Target Frame: <Fixed Frame>
-      Yaw: 0.5153818726539612
+      Yaw: 0.465381920337677
     Saved: ~
 Window Geometry:
   Displays:

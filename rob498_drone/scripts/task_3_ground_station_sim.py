@@ -4,6 +4,7 @@ import rospy
 from std_srvs.srv import Empty
 from configs import Configs
 
+<<<<<<< HEAD
 from geometry_msgs.msg import PoseArray, Pose, TransformStamped
 from rob498_drone.srv import Task3TestService, Task3TestServiceRequest
 
@@ -50,12 +51,16 @@ WAYPOINT_POSES.poses.append(WAYPOINT_2)
 WAYPOINT_POSES.poses.append(WAYPOINT_3)
 WAYPOINT_POSES.poses.append(WAYPOINT_4)
 
+=======
+import numpy as np
+>>>>>>> 8bf6adb2f70a0b5077a04bf0388f41f8f053ad74
 
 
 class Task3GroundStationSim:
     def __init__(self):
-        # wait for the services to become available
         name = 'rob498_drone_' + Configs.team_id
+
+        # wait for the services to become available
         rospy.wait_for_service(name + '/comm/launch')
         rospy.wait_for_service(name + '/comm/test')
         rospy.wait_for_service(name + '/comm/land')
@@ -64,13 +69,13 @@ class Task3GroundStationSim:
         try:
             # create service proxies
             self.srv_launch_client = rospy.ServiceProxy(name + '/comm/launch', Empty)
-            self.srv_test_client = rospy.ServiceProxy(name + '/comm/test', Task3TestService)
+            self.srv_test_client = rospy.ServiceProxy(name + '/comm/test', Empty)
             self.srv_land_client = rospy.ServiceProxy(name + '/comm/land', Empty)
             self.srv_abort_client = rospy.ServiceProxy(name + '/comm/abort', Empty)
         except rospy.ServiceException as e:
             print(f"Service call failed: {e}")
-        
-        
+    
+
     def run(self):
         while (not rospy.is_shutdown()):
             print("1: Launch | 2: Test | 3: Land | 4: Abort")
@@ -81,11 +86,7 @@ class Task3GroundStationSim:
                 self.srv_launch_client()
                 print("Launch request sent successfully.")
             elif key == '2':
-                try:
-                    world_vicon = rospy.wait_for_message("vicon/ROB498_Drone/ROB498_Drone", TransformStamped)
-                except rospy.ROSException as e:
-                    rospy.logerr("Timeout waiting for vicon/ROB498_Drone/ROB498_Drone.")
-                self.srv_test_client(WAYPOINT_POSES, world_vicon)
+                self.srv_test_client()
                 print("Test request sent successfully.")
             elif key == '3':
                 self.srv_land_client()

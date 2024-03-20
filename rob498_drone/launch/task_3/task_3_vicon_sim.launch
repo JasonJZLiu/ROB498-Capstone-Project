@@ -2,8 +2,7 @@
 <launch>
 	<!-- Include the MAVROS node with SITL and Gazebo -->
 	<include file="$(find px4)/launch/mavros_posix_sitl.launch">
-		<!-- <arg name="world" default="$(find rob498_drone)/simulation/worlds/empty_world/empty.world"/> -->
-		<arg name="world" default="$(find rob498_drone)/simulation/worlds/small_house/small_house.world"/>
+		<arg name="world" default="$(find rob498_drone)/simulation/worlds/empty_world/empty.world"/>
 		<arg name="vehicle" default="iris_depth_camera"/>
 		<arg name="x" default="0.7"/>
 		<arg name="y" default="0.5"/>
