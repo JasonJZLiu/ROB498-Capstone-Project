@@ -5,8 +5,8 @@
 		<arg name="world" default="$(find rob498_drone)/simulation/worlds/empty_world/empty.world"/>
 		<!-- <arg name="world" default="$(find rob498_drone)/simulation/worlds/small_house/small_house.world"/> -->
 		<arg name="vehicle" default="iris_depth_camera"/>
-		<arg name="x" default="0.7"/>
-		<arg name="y" default="0.5"/>
+		<arg name="x" default="0.2"/>
+		<arg name="y" default="0.2"/>
 	</include>
 
 	<node pkg="tf" type="static_transform_publisher" name="tf_world_map"
