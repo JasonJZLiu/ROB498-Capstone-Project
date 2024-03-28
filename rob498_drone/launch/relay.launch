@@ -1,0 +1,40 @@
+<launch>
+  <!-- Include the RealSense camera launch file -->
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="align_depth" value="true"/> <!-- Align depth to color stream -->
+    <arg name="enable_infra1" value="false"/> <!-- Disable infrared stream 1 if not needed -->
+    <arg name="enable_infra2" value="false"/> <!-- Disable infrared stream 2 if not needed -->
+    <!-- <arg name="filters" value="pointcloud"/> Apply any filters: pointcloud for 3D point cloud -->
+  </include>
+
+  <arg name="rate"  default="15"/>
+  <arg name="approx_sync" default="true"/>
+  <arg name="rgbd_sync" default="true"/>
+
+  <group ns="camera">
+    <node if="$(arg rgbd_sync)" pkg="nodelet" type="nodelet" name="rgbd_sync" args="load rtabmap_sync/rgbd_sync realsense2_camera_manager" output="screen">
+      <param name="compressed_rate"  type="double" value="$(arg rate)"/>
+      <param name="approx_sync"      type="bool"   value="$(arg approx_sync)"/>
+
+      <remap from="rgb/image"       to="/camera/color/image_raw"/>
+      <remap from="depth/image"     to="/camera/aligned_depth_to_color/image_raw"/>
+      <remap from="rgb/camera_info" to="/camera/color/camera_info"/>
+
+      <remap from="rgbd_image"      to="rgbd_image"/>
+    </node>
+
+    <!-- Replace this section if not using rgbd_sync -->
+    <node unless="$(arg rgbd_sync)" pkg="nodelet" type="nodelet" name="data_throttle" args="load rtabmap_ros/data_throttle camera_nodelet_manager" output="screen">
+      <param name="rate"         type="double" value="$(arg rate)"/>
+      <param name="approx_sync"  type="bool"   value="$(arg approx_sync)"/>
+
+      <remap from="rgb/image_in"       to="/camera/color/image_raw"/>
+      <remap from="depth/image_in"     to="/camera/aligned_depth_to_color/image_raw"/>
+      <remap from="rgb/camera_info_in" to="/camera/color/camera_info"/>
+
+      <remap from="rgb/image_out"       to="throttled/rgb/image_raw"/>
+      <remap from="depth/image_out"     to="throttled/depth/image_raw"/>
+      <remap from="rgb/camera_info_out" to="throttled/rgb/camera_info"/>
+    </node>
+  </group>      
+</launch>
