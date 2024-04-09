@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<launch>
+
+	<!-- <include file="$(find mavros)/launch/px4.launch">
+		<arg name="fcu_url" default="/dev/ttyUSB0:921600"/>
+	</include>
+
+	<include file="$(find px4_realsense_bridge)/launch/bridge_two_cameras.launch" >
+    </include>
+
+	<node pkg="tf" type="static_transform_publisher" name="tf_world_map"
+        args="0 0 0 0 0 0 odom map 1000"/>
+	<node pkg="tf" type="static_transform_publisher" name="tf_baseLink_vicon"
+		args="0.077 0 0 0 0 0 base_link vicon 1000"/>
+
+	<node pkg="tf" type="static_transform_publisher" name="tf_baseLink_d435Link"
+		args="0.08 0 -0.1 0 0 0 base_link d435_link 1000"/>
+
+	<node pkg="rob498_drone" type="world_to_odom.py" name="world_to_odom_py" required="true" output="screen"/>
+
+	<node pkg="rob498_drone" type="waypoint_controller.py" name="waypoint_controller_py" required="true" output="screen"/> -->
+
+	<include file="$(find px4_realsense_bridge)/launch/rs_d400_and_t265_mod.launch" >
+		<arg name="enable_fisheye"          value="true"/>
+		<arg name="fisheye_fps"              value="30"/>
+		<arg name="gyro_fps"                 value="200"/>
+		<arg name="accel_fps"                value="62"/>
+		<arg name="enable_gyro"              value="false"/>
+		<arg name="enable_accel"             value="false"/>
+		<arg name="publish_odom_tf"          value="false"/>
+	</include>
+
+	<node pkg="nodelet" type="nodelet" name="standalone_nodelet" args="manager" />
+	<node pkg="nodelet" type="nodelet" name="point_cloud_xyzrgb" args="load depth_image_proc/point_cloud_xyz standalone_nodelet">
+		<remap from="camera_info" to="/d435/depth/camera_info" />  
+		<remap from="image_rect" to="/d435/depth/image_rect_raw" />
+	</node>
+
+    <!-- <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />
+	<node pkg="nodelet" type="nodelet" name="voxel_grid" args="load pcl/VoxelGrid pcl_manager" output="screen">
+		<remap from="~input" to="/points" />
+		<rosparam>
+filter_field_name: z
+filter_limit_min: 0.01
+filter_limit_max: 3
+filter_limit_negative: False
+leaf_size: 0.05
+</rosparam>
+	</node> -->
+
+
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+		<param name="resolution" value="0.2"/>
+
+			<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
+			<param name="frame_id" type="string" value="d435_link"/>
+
+			<!-- maximum range to integrate (speedup!) -->
+			<param name="sensor_model/max_range" value="4.0"/>
+			<param name="base_frame_id " value="d435_link" type="str"/>
+
+			<!-- data source to integrate (PointCloud2) -->
+			<remap from="cloud_in" to="/points"/>
+
+	</node>
+
+
+	<node pkg="rob498_drone" type="camera_test.py" name="camera_test_py" required="true" output="screen"/>
+
+
+    
+</launch>

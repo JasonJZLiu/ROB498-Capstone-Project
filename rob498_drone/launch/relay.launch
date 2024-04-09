@@ -1,24 +1,28 @@
 <launch>
+
+  <arg name="camera" value="d435"/>
+  <arg name="rate"  default="15"/>
+  <arg name="approx_sync" default="true"/>
+  <arg name="rgbd_sync" default="true"/>
+
   <!-- Include the RealSense camera launch file -->
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
     <arg name="align_depth" value="true"/> <!-- Align depth to color stream -->
     <arg name="enable_infra1" value="false"/> <!-- Disable infrared stream 1 if not needed -->
     <arg name="enable_infra2" value="false"/> <!-- Disable infrared stream 2 if not needed -->
+    <arg name="camera" value="$(arg camera)"/>
+    <!-- <arg name="publish_odom_tf"           default="false"/> -->
     <!-- <arg name="filters" value="pointcloud"/> Apply any filters: pointcloud for 3D point cloud -->
   </include>
 
-  <arg name="rate"  default="15"/>
-  <arg name="approx_sync" default="true"/>
-  <arg name="rgbd_sync" default="true"/>
-
-  <group ns="camera">
+  <group ns="$(arg camera)">
     <node if="$(arg rgbd_sync)" pkg="nodelet" type="nodelet" name="rgbd_sync" args="load rtabmap_sync/rgbd_sync realsense2_camera_manager" output="screen">
       <param name="compressed_rate"  type="double" value="$(arg rate)"/>
       <param name="approx_sync"      type="bool"   value="$(arg approx_sync)"/>
 
-      <remap from="rgb/image"       to="/camera/color/image_raw"/>
-      <remap from="depth/image"     to="/camera/aligned_depth_to_color/image_raw"/>
-      <remap from="rgb/camera_info" to="/camera/color/camera_info"/>
+      <remap from="rgb/image"       to="/$(arg camera)/color/image_raw"/>
+      <remap from="depth/image"     to="/$(arg camera)/aligned_depth_to_color/image_raw"/>
+      <remap from="rgb/camera_info" to="/$(arg camera)/color/camera_info"/>
 
       <remap from="rgbd_image"      to="rgbd_image"/>
     </node>

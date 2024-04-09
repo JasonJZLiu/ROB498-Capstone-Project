@@ -21,6 +21,8 @@ class WaypointController:
     has_taken_off = False
 
     def __init__(self):
+        self.tf_pub = tf2_ros.TransformBroadcaster()
+
         # subscribe to the current mavros state
         self.mavros_state = State()
         self.mavros_state_sub = rospy.Subscriber("mavros/state", State, callback=self._mavros_state_callback)
@@ -95,6 +97,14 @@ class WaypointController:
     def _pose_callback(self, pose_stamped):
         # in frame: map
         self.current_pose = pose_stamped
+        
+        # optional for connecting odom to base_link in the tf_tree
+        tf_odom_base_link = pose_to_transform_stamped(
+            pose=pose_stamped.pose, frame_id="odom", child_frame_id="base_link"
+        )
+        self.tf_pub.sendTransform(tf_odom_base_link)
+
+
 
 
     def setup_waypoint_srvs(self):
