@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+
+
+	<node pkg="rob498_drone" type="project.py" name="project_py" output="screen" launch-prefix="gnome-terminal --command" />
+	<node pkg="rob498_drone" type="path_planner.py" name="path_planner_py" output="screen"/>
+
+
+
+
+
+    
+</launch>
