@@ -43,8 +43,5 @@
 	</node>
 
 
-	<!-- <node pkg="rob498_drone" type="camera_test.py" name="camera_test_py" required="true" output="screen"/> -->
-
-
     
 </launch>

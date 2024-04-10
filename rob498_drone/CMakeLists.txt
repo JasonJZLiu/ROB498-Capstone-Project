@@ -61,6 +61,7 @@ add_service_files(
   WorldToOdomViconService.srv
   Task3TestService.srv
   AStarService.srv
+  ProjectTeleopService.srv
 )
 
 ## Generate actions in the 'action' folder

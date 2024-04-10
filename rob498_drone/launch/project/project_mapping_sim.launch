@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<launch>
+
+	<!-- Include the MAVROS node with SITL and Gazebo -->
+	<include file="$(find px4)/launch/mavros_posix_sitl.launch">
+		<arg name="world" default="$(find rob498_drone)/simulation/worlds/block_world/block.world"/>
+		<!-- <arg name="world" default="$(find rob498_drone)/simulation/worlds/small_house/small_house.world"/> -->
+		<arg name="vehicle" default="iris_depth_camera"/>
+		<arg name="x" default="0"/>
+		<arg name="y" default="0"/>
+	</include>
+
+
+
+	<node pkg="tf" type="static_transform_publisher" name="tf_world_map"
+        args="0 0 0 0 0 0 odom map 1000"/>
+	<node pkg="tf" type="static_transform_publisher" name="tf_baseLink_vicon"
+        args="0 0 0 0 0 0 base_link vicon 1000"/>
+
+	<node pkg="tf" type="static_transform_publisher" name="tf_baseLink_d435Link"
+		args="0 0 0 -1.5708 0 -1.5708 base_link camera_link 1000"/>
+
+
+	<node pkg="rob498_drone" type="world_to_odom.py" name="world_to_odom_py" required="true" output="screen"/>
+	<node pkg="rob498_drone" type="waypoint_controller.py" name="waypoint_controller_py" required="true" output="screen"/>
+
+
+    <node pkg="rob498_drone" type="vicon_sim.py" name="vicon_sim_py" required="true" output="screen"/>
+	<node pkg="rob498_drone" type="vicon_bridge.py" name="vicon_bridge_py" required="true" output="screen"/>
+
+
+
+	<node pkg="nodelet" type="nodelet" name="standalone_nodelet" args="manager" />
+	<node pkg="nodelet" type="nodelet" name="point_cloud_xyzrgb" args="load depth_image_proc/point_cloud_xyz standalone_nodelet">
+		<remap from="camera_info" to="/iris_depth_camera/camera/depth/camera_info" />  
+		<remap from="image_rect" to="/iris_depth_camera/camera/depth/image_raw" />
+	</node>
+
+
+
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
+		<param name="resolution" value="0.2"/>
+			<param name="latch" type="bool" value="false"/>
+
+			<param name="frame_id" type="string" value="odom"/>
+
+			<param name="sensor_model/max_range" value="3.0"/>
+			<param name="base_frame_id " value="base_link" type="str"/>
+
+			<remap from="cloud_in" to="/points"/>
+
+	</node>
+
+   
+
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find rob498_drone)/visualization/project_simulation_vis.rviz" />
+
+</launch>

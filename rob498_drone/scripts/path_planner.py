@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import rospy
-from geometry_msgs.msg import PoseStamped, TransformStamped, PoseArray
+from geometry_msgs.msg import PoseStamped, TransformStamped, PoseArray, Point
+from visualization_msgs.msg import Marker
 from sensor_msgs.msg import PointCloud2
 import sensor_msgs.point_cloud2 as pc2
 from rob498_drone.srv import AStarService, AStarServiceResponse
@@ -14,18 +15,9 @@ import numpy as np
 
 
 
-
-
-
-
-
-
-
-
-
 class PathPlanner:
     def __init__(self):
-        self.resolution = 0.5
+        self.resolution = 0.2
         rospy.wait_for_service("waypoint/enqueue")
         self.waypoint_enqueue_client = rospy.ServiceProxy("waypoint/enqueue", WaypointEnqueueService)
 
@@ -35,6 +27,8 @@ class PathPlanner:
 
         rospy.Service("path_planner/run_astar", AStarService, self._handle_astar_srv)
         print("PathPlanner: Finished setting up AStarService.")
+
+        self.safe_target_point_marker_pub = rospy.Publisher('/project_safe_target_point_marker', Marker, queue_size=10)
 
 
     def _obstacle_pointcloud_callback(self, point_cloud_2):
@@ -46,10 +40,6 @@ class PathPlanner:
         self.point_cloud_arr_idx = np.round(point_cloud_arr).astype(int)
 
 
-        
-
-
-
     def _pose_callback(self, pose_stamped):
         # in frame: map
         current_pos = pose_stamped.pose.position
@@ -58,10 +48,6 @@ class PathPlanner:
 
 
  
-    def odom_pos_to_idx(self, pos):
-        pos /= self.resolution
-        idx = np.round(pos).astype(int)
-        return idx
 
 
 
@@ -98,11 +84,13 @@ class PathPlanner:
 
         # TODO: get a free grid idx closest to target_point
         safe_target_idx_adjusted = self.find_closest_free_space_list_queue(grid, target_idx_adjusted)
+
+
+        safe_target_pos = self.adjusted_idx_to_odom_pos(safe_target_idx_adjusted, min_indices)
+        self.visualize_safe_target_point(safe_target_pos)
         
         print(safe_target_idx_adjusted + min_indices)
         print("\n")
-
-
 
         return AStarServiceResponse(success=True, message="A* Service Processed successfully")
 
@@ -161,22 +149,18 @@ class PathPlanner:
 
 
 
+    def odom_pos_to_idx(self, pos):
+        pos /= self.resolution
+        idx = np.round(pos).astype(int)
+        return idx
 
-
-
-
-    
 
     def adjusted_idx_to_odom_pos(self, adjusted_idx, min_indices):
         # TODO: make this vectorized
         idx = (adjusted_idx + min_indices).astype(float)
         odom_pos = idx * self.resolution + self.resolution/2
         return odom_pos
-        
 
-
-    
-    
 
 
     def visualize_occupancy_grid(self, grid, min_indices):
@@ -204,6 +188,37 @@ class PathPlanner:
 
         # Show the plot
         plt.show()
+    
+
+
+    def visualize_safe_target_point(self, target_point):
+        # visualization
+        marker = Marker()
+        marker.header.frame_id = "world"  # Adjust based on your TF frames
+        marker.header.stamp = rospy.Time.now()
+        marker.ns = "spheres"
+        marker.id = 0
+        marker.type = Marker.SPHERE
+        marker.action = Marker.ADD
+        marker.pose.position.x = target_point[0]
+        marker.pose.position.y = target_point[1]
+        marker.pose.position.z = target_point[2]
+        marker.pose.orientation.w = 1.0
+        
+        # Size of the sphere
+        sphere_diameter = 0.2  # Adjust the size of the sphere here
+        marker.scale.x = sphere_diameter  # Diameter of the sphere in X direction
+        marker.scale.y = sphere_diameter  # Diameter of the sphere in Y direction
+        marker.scale.z = sphere_diameter  # Diameter of the sphere in Z direction
+        
+        # Color and transparency
+        marker.color.a = 1.0  # Don't forget to set the alpha!
+        marker.color.r = 0.0
+        marker.color.g = 1.0
+        marker.color.b = 0.0
+        
+        self.safe_target_point_marker_pub.publish(marker)
+
 
 
 
