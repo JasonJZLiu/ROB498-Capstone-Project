@@ -10,6 +10,7 @@ from rob498_drone.srv import AStarService
 from waypoint_controller import WaypointController
 
 from rob498_drone.srv import ProjectTeleopService, ProjectTeleopServiceResponse
+from rob498_drone.srv import WaypointEnqueueService
 
 import numpy as np
 
@@ -19,6 +20,13 @@ from utils import *
 
 class Project:
     def __init__(self):
+
+        rospy.wait_for_service("waypoint/enqueue")
+        self.waypoint_enqueue_client = rospy.ServiceProxy("waypoint/enqueue", WaypointEnqueueService)
+
+        rospy.wait_for_service("waypoint/clear")
+        self.waypoint_clear_client = rospy.ServiceProxy("waypoint/clear", Empty)
+
         print("WAITING FOR path_planner/run_astar")
         rospy.wait_for_service("path_planner/run_astar")
         self.path_planner_run_astar_client = rospy.ServiceProxy("path_planner/run_astar", AStarService)
@@ -67,7 +75,7 @@ class Project:
 
 
     def _handle_teleop_srv(self, req):
-        trans_delta_x = 1.0
+        trans_delta_x = 3.0
         trans_delta_y = 1.0
         trans_delta_z = 0.3
 
@@ -92,18 +100,26 @@ class Project:
         odom_T_target = odom_T_base @ base_T_target
         target_pose = matrix_to_pose(odom_T_target)
         target_point = target_pose.position
-
-        print(target_point)
+        self.visualize_target_point(target_point)
 
         # target_point = Point()
         # target_point.x = 2.5 
         # target_point.y = 0
-        # target_point.z =0
+        # target_point.z = 0
 
+        if teleop_command in ["s"]:
+            waypoint_list = list()
+            waypoint_pose_stamped = PoseStamped()
+            waypoint_pose_stamped.header.stamp = rospy.Time.now()
+            waypoint_pose_stamped.header.frame_id = "vicon"
+            waypoint_pose_stamped.pose = target_pose
+            waypoint_list = [waypoint_pose_stamped]
+            
+            self.waypoint_clear_client()
+            self.waypoint_enqueue_client(waypoint_list)
+        else:
 
-        self.visualize_target_point(target_point)
-
-        self.path_planner_run_astar_client(target_point)
+            self.path_planner_run_astar_client(target_point)
 
         return ProjectTeleopServiceResponse(success=True)
 
