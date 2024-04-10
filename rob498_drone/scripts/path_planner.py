@@ -146,13 +146,14 @@ def a_star(grid, start, goal):
                 if neighbor not in [i[2] for i in open_set]:
                     heapq.heappush(open_set, (f_score[neighbor], g_score[neighbor], neighbor))
 
-    return None  # Return an empty path if there is no path
+    # Return None if there is no path
+    return None  
 
 
 
 class PathPlanner:
     def __init__(self):
-        self.resolution = 0.2
+        self.resolution = 0.5
         rospy.wait_for_service("waypoint/enqueue")
         self.waypoint_enqueue_client = rospy.ServiceProxy("waypoint/enqueue", WaypointEnqueueService)
 
@@ -194,8 +195,10 @@ class PathPlanner:
 
         # construct the grid array used by A*
         obstacle_indices = self.point_cloud_arr_idx
-        min_indices = np.min(obstacle_indices, axis=0)
-        max_indices = np.max(obstacle_indices, axis=0)
+
+        obstacle_idx_with_curr_pos = np.vstack((obstacle_indices, target_idx, self.drone_position_idx))
+        min_indices = np.min(obstacle_idx_with_curr_pos, axis=0) - 2
+        max_indices = np.max(obstacle_idx_with_curr_pos, axis=0) + 2
 
         # Calculate grid size; add 1 because indices are inclusive, and offset for negatives
         grid_size = max_indices - min_indices + 1
@@ -208,9 +211,9 @@ class PathPlanner:
 
         # Mark each obstacle in the grid
         for idx in adjusted_indices:
-            grid[tuple(idx)] = 1
+            for offset in [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]:
+                grid[tuple(idx + np.asarray(offset))] = 1
         
-
 
         target_idx_adjusted = target_idx - min_indices
 
@@ -218,6 +221,7 @@ class PathPlanner:
         safe_target_idx_adjusted = self.find_closest_free_grid(grid, target_idx_adjusted)
         if safe_target_idx_adjusted is None:
             print("CANNOT FIND A VALID SAFE TARGET")
+            self.waypoint_clear_client()
             return AStarServiceResponse(success=False, message="CANNOT FIND A VALID SAFE TARGET")
 
 
@@ -231,6 +235,7 @@ class PathPlanner:
         adjusted_idx_path = a_star(grid, starting_idx_adjusted, safe_target_idx_adjusted)
         if adjusted_idx_path is None:
             print("CANNOT FIND A VALID PATH")
+            self.waypoint_clear_client()
             return AStarServiceResponse(success=False, message="CANNOT FIND A VALID PATH") 
         
 
@@ -264,7 +269,6 @@ class PathPlanner:
         self.waypoint_enqueue_client(waypoint_list)
 
 
- 
         return AStarServiceResponse(success=True, message="A* Service Processed successfully")
 
 

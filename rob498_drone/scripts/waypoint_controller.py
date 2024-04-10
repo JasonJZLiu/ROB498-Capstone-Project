@@ -133,6 +133,7 @@ class WaypointController:
 
     def _handle_waypoint_enqueue_srv(self, req):
         self.waypoint_queue += [self.transform_waypoint_target(world_vicon_waypoint) for world_vicon_waypoint in req.poses]
+        self.current_waypoint = self.waypoint_queue[0]
         return WaypointEnqueueServiceResponse(success=True, message="Waypoint Enqueue Processed successfully")
 
 

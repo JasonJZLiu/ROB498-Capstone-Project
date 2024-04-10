@@ -13,6 +13,7 @@ from rob498_drone.srv import ProjectTeleopService, ProjectTeleopServiceResponse
 from rob498_drone.srv import WaypointEnqueueService
 
 import numpy as np
+from tf.transformations import euler_matrix
 
 from utils import *
 
@@ -20,6 +21,10 @@ from utils import *
 
 class Project:
     def __init__(self):
+        self.enable_path_planner = False
+
+        # 1 hz
+        self.rate = rospy.Rate(1)
 
         rospy.wait_for_service("waypoint/enqueue")
         self.waypoint_enqueue_client = rospy.ServiceProxy("waypoint/enqueue", WaypointEnqueueService)
@@ -75,9 +80,11 @@ class Project:
 
 
     def _handle_teleop_srv(self, req):
-        trans_delta_x = 3.0
+        large_trans_delta_x = 2.0
+        trans_delta_x = 1.0
         trans_delta_y = 1.0
         trans_delta_z = 0.3
+        yaw_delta = 0.3926991
 
         teleop_command = req.teleop_command
 
@@ -96,18 +103,19 @@ class Project:
             base_T_target[2, 3] = trans_delta_z
         elif teleop_command == "e":
             base_T_target[2, 3] = -trans_delta_z
+        elif teleop_command == "j":
+            base_T_target = euler_matrix(0, 0, yaw_delta)
+        elif teleop_command == "l":
+            base_T_target = euler_matrix(0, 0, -yaw_delta)
+        elif teleop_command == "g":
+            base_T_target[0, 3] = large_trans_delta_x
 
         odom_T_target = odom_T_base @ base_T_target
         target_pose = matrix_to_pose(odom_T_target)
-        target_point = target_pose.position
-        self.visualize_target_point(target_point)
+        self.target_point = target_pose.position
+        self.visualize_target_point(self.target_point)
 
-        # target_point = Point()
-        # target_point.x = 2.5 
-        # target_point.y = 0
-        # target_point.z = 0
-
-        if teleop_command in ["s"]:
+        if teleop_command in ["j", "l", "q", "e"]:
             waypoint_list = list()
             waypoint_pose_stamped = PoseStamped()
             waypoint_pose_stamped.header.stamp = rospy.Time.now()
@@ -115,11 +123,15 @@ class Project:
             waypoint_pose_stamped.pose = target_pose
             waypoint_list = [waypoint_pose_stamped]
             
+            self.enable_path_planner = False
             self.waypoint_clear_client()
             self.waypoint_enqueue_client(waypoint_list)
+        elif teleop_command == "x":
+            self.enable_path_planner = False
+            self.waypoint_clear_client()
         else:
+            self.enable_path_planner = True
 
-            self.path_planner_run_astar_client(target_point)
 
         return ProjectTeleopServiceResponse(success=True)
 
@@ -152,6 +164,18 @@ class Project:
         marker.color.b = 0.0
                 
         self.target_point_marker_pub.publish(marker)
+    
+
+    def run(self):
+        while(not rospy.is_shutdown()):
+            if self.enable_path_planner == False:
+                self.rate.sleep()
+                continue
+
+            self.path_planner_run_astar_client(self.target_point)
+
+            self.rate.sleep()
+    
 
 
 
@@ -163,6 +187,7 @@ class Project:
 if __name__ == '__main__':
     rospy.init_node("Project")
     project = Project()
+    project.run()
     rospy.spin()
 
 

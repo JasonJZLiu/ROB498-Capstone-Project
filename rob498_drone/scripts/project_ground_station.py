@@ -47,7 +47,7 @@ class ProjectGroundStation:
             elif key == '4':
                 self.srv_abort_client()
                 print("Abort request sent successfully.")
-            elif key in ["w", "s", "a", "d", "q", "e"]:
+            elif key in ["w", "s", "a", "d", "q", "e", "j", "l", "g", "x"]:
                 self.srv_teleop_client(key)
                 print("Teleop request sent successfully.")
             else:
