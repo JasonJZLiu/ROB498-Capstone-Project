@@ -19,6 +19,7 @@ from a_star import a_star
 
 class PathPlanner:
     def __init__(self):
+        # ensure this resolution is the same as the one used in octomap
         self.resolution = 0.5
         rospy.wait_for_service("waypoint/enqueue")
         self.waypoint_enqueue_client = rospy.ServiceProxy("waypoint/enqueue", WaypointEnqueueService)

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+	
+
+	<node pkg="rob498_drone" type="project_ground_station.py" name="project_ground_station_py" output="screen"/>
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find rob498_drone)/visualization/project_simulation_vis.rviz" />
+	
+</launch>

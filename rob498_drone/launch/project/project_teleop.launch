@@ -17,7 +17,6 @@
 		args="0.08 0 -0.1 0 0 0 base_link d435_link 1000"/>
 
 	<node pkg="rob498_drone" type="world_to_odom.py" name="world_to_odom_py" required="true" output="screen"/>
-
 	<node pkg="rob498_drone" type="waypoint_controller.py" name="waypoint_controller_py" required="true" output="screen"/>
 
 
@@ -26,7 +25,6 @@
 		<remap from="camera_info" to="/d435/depth/camera_info" />  
 		<remap from="image_rect" to="/d435/depth/image_rect_raw" />
 	</node>
-
 
 
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
@@ -39,8 +37,10 @@
 			<param name="base_frame_id " value="base_link" type="str"/>
 
 			<remap from="cloud_in" to="/points"/>
-
 	</node>
+
+	<node pkg="rob498_drone" type="project.py" name="project_py" output="screen"/>
+	<node pkg="rob498_drone" type="path_planner.py" name="path_planner_py" output="screen"/>
 
 
     

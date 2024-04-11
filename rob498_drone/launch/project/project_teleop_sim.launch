@@ -11,7 +11,6 @@
 	</include>
 
 
-
 	<node pkg="tf" type="static_transform_publisher" name="tf_world_map"
         args="0 0 0 0 0 0 odom map 1000"/>
 	<node pkg="tf" type="static_transform_publisher" name="tf_baseLink_vicon"
@@ -29,13 +28,11 @@
 	<node pkg="rob498_drone" type="vicon_bridge.py" name="vicon_bridge_py" required="true" output="screen"/>
 
 
-
 	<node pkg="nodelet" type="nodelet" name="standalone_nodelet" args="manager" />
 	<node pkg="nodelet" type="nodelet" name="point_cloud_xyzrgb" args="load depth_image_proc/point_cloud_xyz standalone_nodelet">
 		<remap from="camera_info" to="/iris_depth_camera/camera/depth/camera_info" />  
 		<remap from="image_rect" to="/iris_depth_camera/camera/depth/image_raw" />
 	</node>
-
 
 
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
@@ -48,11 +45,18 @@
 			<param name="base_frame_id " value="base_link" type="str"/>
 
 			<remap from="cloud_in" to="/points"/>
-
 	</node>
 
-   
 
+
+
+	<node pkg="rob498_drone" type="project.py" name="project_py" output="screen"/>
+	<node pkg="rob498_drone" type="path_planner.py" name="path_planner_py" output="screen"/>
+
+
+   	<node pkg="rob498_drone" type="project_ground_station.py" name="project_ground_station_py" output="screen"
+		launch-prefix="gnome-terminal --command" />
 	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find rob498_drone)/visualization/project_simulation_vis.rviz" />
+
 
 </launch>

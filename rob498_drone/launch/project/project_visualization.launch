@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+	
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find rob498_drone)/visualization/project_simulation_vis.rviz" />
+	
+</launch>
