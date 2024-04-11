@@ -24,6 +24,9 @@ class PathPlanner:
         max_height = float(Configs.path_planner_max_height)
         self.max_height_idx = self.odom_pos_to_idx(np.array([0, 0, max_height]))[2]
 
+        min_height = float(Configs.path_planner_min_height)
+        self.min_height_idx = self.odom_pos_to_idx(np.array([0, 0, min_height]))[2]
+
         rospy.wait_for_service("waypoint/enqueue")
         self.waypoint_enqueue_client = rospy.ServiceProxy("waypoint/enqueue", WaypointEnqueueService)
 
@@ -62,44 +65,45 @@ class PathPlanner:
 
 
     def _handle_astar_srv(self, req):
-
-        target_point = np.array([req.target_point.x, req.target_point.y, req.target_point.z])
+        target_orientation = req.target_pose.orientation
+        target_point = np.array([req.target_pose.position.x, req.target_pose.position.y, req.target_pose.position.z])
         target_idx = self.odom_pos_to_idx(target_point)
 
         # construct the grid array used by A*
         obstacle_indices = self.point_cloud_arr_idx
+        # ensure the grid includes the current drone position, the target position, and obstacles
+        all_pos_idx = np.vstack((obstacle_indices, target_idx, self.drone_position_idx))
+        # add a 2 block buffer
+        min_indices = np.min(all_pos_idx, axis=0) - 2
+        max_indices = np.max(all_pos_idx, axis=0) + 2
 
-        # self.odom_pos_to_idx()
-
-        obstacle_idx_with_curr_pos = np.vstack((obstacle_indices, target_idx, self.drone_position_idx))
-        min_indices = np.min(obstacle_idx_with_curr_pos, axis=0) - 2
-        max_indices = np.max(obstacle_idx_with_curr_pos, axis=0) + 2
-
-        # Calculate grid size; add 1 because indices are inclusive, and offset for negatives
+        # calculate grid size; add 1 because indices are inclusive, and offset for negatives
         grid_size = max_indices - min_indices + 1
 
-        # Initialize grid to zeros; using int datatype for simplicity
+        # initialize grid to zeros
         grid = np.zeros(grid_size, dtype=int)
 
-        # Adjust indices to be zero-based for the grid
+        # adjust indices to be zero-based for the grid
         adjusted_indices = obstacle_indices - min_indices
 
-        # Mark each obstacle in the grid
+        # mark each obstacle in the grid
         for idx in adjusted_indices:
             for offset in [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]:
-                        #    [2, 0, 0], [-2, 0, 0], [0, 2, 0], [0, -2, 0], [0, 0, 2], [0, 0, -2]]:
                 grid[tuple(idx + np.asarray(offset))] = 1
 
-
+        # make all grids above max height obstacles
         max_height_idx_adjusted = self.max_height_idx - min_indices[2]
-
         if max_height_idx_adjusted < grid.shape[2]:
             grid[:, :, max_height_idx_adjusted:] = 1
+
+        # make all grids above min height obstacles
+        min_height_idx_adjusted = self.min_height_idx - min_indices[2]
+        if min_height_idx_adjusted > 0:
+            grid[:, :, 0:min_height_idx_adjusted] = 1
         
 
+        # search for a free grid idx closest to target_point
         target_idx_adjusted = target_idx - min_indices
-
-        # get a free grid idx closest to target_point
         safe_target_idx_adjusted = find_closest_free_grid(grid, target_idx_adjusted)
         if safe_target_idx_adjusted is None:
             rospy.loginfo("PathPlanner: Cannot find a valid safe target!")
@@ -135,7 +139,7 @@ class PathPlanner:
             waypoint_pose.position.x = waypoint_pos[0]
             waypoint_pose.position.y = waypoint_pos[1]
             waypoint_pose.position.z = waypoint_pos[2]
-            waypoint_pose.orientation = self.drone_pose.orientation
+            waypoint_pose.orientation = target_orientation
 
             waypoint_pose_stamped = PoseStamped()
             waypoint_pose_stamped.header.stamp = rospy.Time.now()

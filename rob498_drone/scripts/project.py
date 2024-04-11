@@ -111,18 +111,22 @@ class Project:
             base_T_target = euler_matrix(0, 0, -yaw_delta)
         elif teleop_command == "g":
             base_T_target[0, 3] = large_trans_delta_x
+        elif teleop_command == "u":
+            base_T_target = euler_matrix(0, 0, 1.5708)
+        elif teleop_command == "o":
+            base_T_target = euler_matrix(0, 0, -1.5708)
 
         odom_T_target = odom_T_base @ base_T_target
-        target_pose = matrix_to_pose(odom_T_target)
-        self.target_point = target_pose.position
+        self.target_pose = matrix_to_pose(odom_T_target)
+        self.target_point = self.target_pose.position
         self.visualize_target_point(self.target_point)
 
-        if teleop_command in ["j", "l", "q", "e"]:
+        if teleop_command in ["j", "l", "q", "e", "u", "o"]:
             waypoint_list = list()
             waypoint_pose_stamped = PoseStamped()
             waypoint_pose_stamped.header.stamp = rospy.Time.now()
             waypoint_pose_stamped.header.frame_id = "vicon"
-            waypoint_pose_stamped.pose = target_pose
+            waypoint_pose_stamped.pose = self.target_pose
             waypoint_list = [waypoint_pose_stamped]
             
             self.enable_path_planner = False
@@ -130,8 +134,6 @@ class Project:
             self.waypoint_enqueue_client(waypoint_list)
             self.clear_visualization()
             
-
-
         elif teleop_command == "x":
             self.enable_path_planner = False
             self.waypoint_clear_client()
@@ -193,7 +195,7 @@ class Project:
                 self.rate.sleep()
                 continue
 
-            self.path_planner_run_astar_client(self.target_point)
+            self.path_planner_run_astar_client(self.target_pose)
             self.rate.sleep()
     
 

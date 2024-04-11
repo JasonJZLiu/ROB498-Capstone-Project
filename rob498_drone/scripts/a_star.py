@@ -67,14 +67,14 @@ def a_star(grid, start, goal):
 
 def find_closest_free_grid(grid, target_index):
         # runs BFS
-
-        detla = 2
+        delta = 1
         directions = np.array([
-             [-detla, 0, 0],
-            [0, detla, 0], [0, -detla, 0],
-            [0, 0, detla], [0, 0, -detla], [detla, 0, 0],
+             [-delta, 0, 0],
+            [0, delta, 0], [0, -delta, 0],
+            [0, 0, delta], [0, 0, -delta], [delta, 0, 0],
         ])
 
+        # ensure the target is within the grid
         target_index = np.clip(target_index, [0, 0, 0], np.array(grid.shape) - 1)
 
         # Check if the start index itself is free

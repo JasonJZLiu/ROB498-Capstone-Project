@@ -1,5 +1,5 @@
 # AStarService.srv
-geometry_msgs/Point target_point
+geometry_msgs/Pose target_pose
 ---
 bool success  # indicate success or failure
 string message  # optional message, e.g., error message
