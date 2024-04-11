@@ -3,8 +3,8 @@
 
 	<!-- Include the MAVROS node with SITL and Gazebo -->
 	<include file="$(find px4)/launch/mavros_posix_sitl.launch">
-		<!-- <arg name="world" default="$(find rob498_drone)/simulation/worlds/block_world/block.world"/> -->
-		<arg name="world" default="$(find rob498_drone)/simulation/worlds/small_house/small_house.world"/>
+		<arg name="world" default="$(find rob498_drone)/simulation/worlds/block_world/block.world"/>
+		<!-- <arg name="world" default="$(find rob498_drone)/simulation/worlds/small_house/small_house.world"/> -->
 		<arg name="vehicle" default="iris_depth_camera"/>
 		<arg name="x" default="0"/>
 		<arg name="y" default="0"/>
@@ -37,7 +37,7 @@
 
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
 		<param name="resolution" value="0.5"/>
-			<param name="latch" type="bool" value="false"/>
+			<param name="latch" type="bool" value="true"/>
 
 			<param name="frame_id" type="string" value="odom"/>
 

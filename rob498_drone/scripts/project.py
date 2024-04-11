@@ -33,10 +33,10 @@ class Project:
         rospy.wait_for_service("waypoint/clear")
         self.waypoint_clear_client = rospy.ServiceProxy("waypoint/clear", Empty)
 
-        print("WAITING FOR path_planner/run_astar")
         rospy.wait_for_service("path_planner/run_astar")
         self.path_planner_run_astar_client = rospy.ServiceProxy("path_planner/run_astar", AStarService)
 
+        rospy.wait_for_message("mavros/local_position/pose", PoseStamped)
         self.pose_sub = rospy.Subscriber("mavros/local_position/pose", PoseStamped, callback=self._pose_callback)
 
         rospy.wait_for_service("waypoint/takeoff")
@@ -194,15 +194,8 @@ class Project:
                 continue
 
             self.path_planner_run_astar_client(self.target_point)
-
             self.rate.sleep()
     
-
-
-
-
-
-
 
 
 if __name__ == '__main__':

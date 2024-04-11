@@ -13,26 +13,31 @@ from std_srvs.srv import Empty, EmptyResponse
 from configs import Configs
 import numpy as np
 
-from a_star import a_star
-
+from a_star import a_star, find_closest_free_grid
 
 
 class PathPlanner:
     def __init__(self):
         # ensure this resolution is the same as the one used in octomap
         self.resolution = 0.5
+
+        max_height = float(Configs.path_planner_max_height)
+        self.max_height_idx = self.odom_pos_to_idx(np.array([0, 0, max_height]))[2]
+
         rospy.wait_for_service("waypoint/enqueue")
         self.waypoint_enqueue_client = rospy.ServiceProxy("waypoint/enqueue", WaypointEnqueueService)
 
         rospy.wait_for_service("waypoint/clear")
         self.waypoint_clear_client = rospy.ServiceProxy("waypoint/clear", Empty)
 
-
+        rospy.wait_for_message("/octomap_point_cloud_centers", PointCloud2)
         self.obstacle_pc_sub = rospy.Subscriber("/octomap_point_cloud_centers", PointCloud2, callback=self._obstacle_pointcloud_callback)
+
+        rospy.wait_for_message("mavros/local_position/pose", PoseStamped)
         self.pose_sub = rospy.Subscriber("mavros/local_position/pose", PoseStamped, callback=self._pose_callback)
 
         rospy.Service("path_planner/run_astar", AStarService, self._handle_astar_srv)
-        print("PathPlanner: Finished setting up AStarService.")
+
 
         self.safe_target_point_marker_pub = rospy.Publisher('/project_safe_target_point_marker', Marker, queue_size=10)
         self.waypoint_path_publisher = rospy.Publisher('/project_waypoint_path', Path, queue_size=10)
@@ -57,11 +62,14 @@ class PathPlanner:
 
 
     def _handle_astar_srv(self, req):
+
         target_point = np.array([req.target_point.x, req.target_point.y, req.target_point.z])
         target_idx = self.odom_pos_to_idx(target_point)
 
         # construct the grid array used by A*
         obstacle_indices = self.point_cloud_arr_idx
+
+        # self.odom_pos_to_idx()
 
         obstacle_idx_with_curr_pos = np.vstack((obstacle_indices, target_idx, self.drone_position_idx))
         min_indices = np.min(obstacle_idx_with_curr_pos, axis=0) - 2
@@ -81,38 +89,42 @@ class PathPlanner:
             for offset in [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]:
                         #    [2, 0, 0], [-2, 0, 0], [0, 2, 0], [0, -2, 0], [0, 0, 2], [0, 0, -2]]:
                 grid[tuple(idx + np.asarray(offset))] = 1
+
+
+        max_height_idx_adjusted = self.max_height_idx - min_indices[2]
+
+        if max_height_idx_adjusted < grid.shape[2]:
+            grid[:, :, max_height_idx_adjusted:] = 1
         
 
         target_idx_adjusted = target_idx - min_indices
 
         # get a free grid idx closest to target_point
-        safe_target_idx_adjusted = self.find_closest_free_grid(grid, target_idx_adjusted)
+        safe_target_idx_adjusted = find_closest_free_grid(grid, target_idx_adjusted)
         if safe_target_idx_adjusted is None:
-            print("CANNOT FIND A VALID SAFE TARGET")
+            rospy.loginfo("PathPlanner: Cannot find a valid safe target!")
             self.waypoint_clear_client()
             self.clear_path_visualization()
-            return AStarServiceResponse(success=False, message="CANNOT FIND A VALID SAFE TARGET")
+            return AStarServiceResponse(success=False, message="PathPlanner: Cannot find a valid safe target!")
 
 
         safe_target_pos = self.adjusted_idx_to_odom_pos(safe_target_idx_adjusted, min_indices)
         self.visualize_safe_target_point(safe_target_pos)
 
-        # starting spot for a star
+
         starting_idx_adjusted = self.drone_position_idx - min_indices
-
-
         adjusted_idx_path = a_star(grid, starting_idx_adjusted, safe_target_idx_adjusted)
+        
         if adjusted_idx_path is None:
-            print("CANNOT FIND A VALID PATH")
+            rospy.loginfo("PathPlanner: Cannot find a valid path!")
             self.waypoint_clear_client()
             self.clear_path_visualization()
-            return AStarServiceResponse(success=False, message="CANNOT FIND A VALID PATH") 
+            return AStarServiceResponse(success=False, message="PathPlanner: Cannot find a valid path!") 
         else:
-            print("FOUND A VALID PATH")
+            rospy.loginfo("PathPlanner: Found a path!")
         
 
         waypoint_list = list()
-
         waypoint_path = Path()
         waypoint_path.header.frame_id = "world"
         waypoint_path.header.stamp = rospy.Time.now()
@@ -135,57 +147,13 @@ class PathPlanner:
             waypoint_path.poses.append(waypoint_pose_stamped)
             
 
-        self.waypoint_path_publisher.publish(waypoint_path)
-
         self.waypoint_clear_client()
         self.waypoint_enqueue_client(waypoint_list)
 
+        # for visualization
+        self.waypoint_path_publisher.publish(waypoint_path)
 
-        return AStarServiceResponse(success=True, message="A* Service Processed successfully")
-
-
-
-
-    def find_closest_free_grid(self, grid, target_index):
-        # Runs BFS
-
-        detla = 2
-        directions = np.array([
-             [-detla, 0, 0],
-            [0, detla, 0], [0, -detla, 0],
-            [0, 0, detla], [0, 0, -detla], [detla, 0, 0],
-        ])
-
-        target_index = np.clip(target_index, [0, 0, 0], np.array(grid.shape) - 1)
-
-        # Check if the start index itself is free
-        if grid[tuple(target_index)] == 0:
-            return tuple(target_index)
-
-        queue = [target_index]
-        visited = set([tuple(target_index)])
-        
-        while queue:
-            current = queue.pop(0)
-            current_np = np.array(current)
-            
-            for d in directions:
-                neighbor = current_np + d
-                neighbor_tuple = tuple(neighbor)
-                
-                # Check boundaries
-                if (0 <= neighbor[0] < grid.shape[0]) and (0 <= neighbor[1] < grid.shape[1]) and (0 <= neighbor[2] < grid.shape[2]):
-                    if neighbor_tuple not in visited:
-                        visited.add(neighbor_tuple)
-                        
-                        # Check if the neighbor is free space
-                        if grid[neighbor_tuple] == 0:
-                            return neighbor
-                        
-                        queue.append(neighbor)
-                        
-        # If no free space is found
-        return None
+        return AStarServiceResponse(success=True, message="PathPlanner A* Service Processed Successfully!")
 
 
 

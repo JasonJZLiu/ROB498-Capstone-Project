@@ -9,3 +9,5 @@ class Configs:
 
     waypoint_pos_delta = 0.4
     waypoint_rot_delta = 0.1
+
+    path_planner_max_height = 2.0

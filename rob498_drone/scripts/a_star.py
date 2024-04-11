@@ -62,3 +62,46 @@ def a_star(grid, start, goal):
 
     # Return None if there is no path
     return None  
+
+
+
+def find_closest_free_grid(grid, target_index):
+        # runs BFS
+
+        detla = 2
+        directions = np.array([
+             [-detla, 0, 0],
+            [0, detla, 0], [0, -detla, 0],
+            [0, 0, detla], [0, 0, -detla], [detla, 0, 0],
+        ])
+
+        target_index = np.clip(target_index, [0, 0, 0], np.array(grid.shape) - 1)
+
+        # Check if the start index itself is free
+        if grid[tuple(target_index)] == 0:
+            return tuple(target_index)
+
+        queue = [target_index]
+        visited = set([tuple(target_index)])
+        
+        while queue:
+            current = queue.pop(0)
+            current_np = np.array(current)
+            
+            for d in directions:
+                neighbor = current_np + d
+                neighbor_tuple = tuple(neighbor)
+                
+                # Check boundaries
+                if (0 <= neighbor[0] < grid.shape[0]) and (0 <= neighbor[1] < grid.shape[1]) and (0 <= neighbor[2] < grid.shape[2]):
+                    if neighbor_tuple not in visited:
+                        visited.add(neighbor_tuple)
+                        
+                        # Check if the neighbor is free space
+                        if grid[neighbor_tuple] == 0:
+                            return neighbor
+                        
+                        queue.append(neighbor)
+                        
+        # If no free space is found
+        return None
