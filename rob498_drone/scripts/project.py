@@ -6,16 +6,14 @@ from std_srvs.srv import Empty, EmptyResponse
 from visualization_msgs.msg import Marker
 from nav_msgs.msg import Path
 
-from configs import Configs
 from rob498_drone.srv import AStarService
-from waypoint_controller import WaypointController
-
 from rob498_drone.srv import ProjectTeleopService, ProjectTeleopServiceResponse
 from rob498_drone.srv import WaypointEnqueueService
 
-import numpy as np
 from tf.transformations import euler_matrix
+import numpy as np
 
+from configs import Configs
 from utils import *
 
 
@@ -147,10 +145,10 @@ class Project:
 
     def clear_visualization(self):
         marker = Marker()
-        marker.header.frame_id = "world"  # Same frame_id as the original marker
-        marker.ns = "spheres"  # Same namespace as the original marker
-        marker.id = 0  # Same ID as the original marker
-        marker.action = Marker.DELETE  # Action to delete the marker
+        marker.header.frame_id = "world" 
+        marker.ns = "spheres"  
+        marker.id = 0  
+        marker.action = Marker.DELETE 
         self.safe_target_point_marker_pub.publish(marker)
 
         empty_path = Path()
@@ -163,7 +161,7 @@ class Project:
     def visualize_target_point(self, target_point):
         # visualization
         marker = Marker()
-        marker.header.frame_id = "world"  # Adjust based on your TF frames
+        marker.header.frame_id = "world" 
         marker.header.stamp = rospy.Time.now()
         marker.ns = "spheres"
         marker.id = 0
@@ -175,10 +173,10 @@ class Project:
         marker.pose.orientation.w = 1.0
         
         # Size of the sphere
-        sphere_diameter = 0.2  # Adjust the size of the sphere here
-        marker.scale.x = sphere_diameter  # Diameter of the sphere in X direction
-        marker.scale.y = sphere_diameter  # Diameter of the sphere in Y direction
-        marker.scale.z = sphere_diameter  # Diameter of the sphere in Z direction
+        sphere_diameter = 0.2 
+        marker.scale.x = sphere_diameter  
+        marker.scale.y = sphere_diameter  
+        marker.scale.z = sphere_diameter 
         
         # Color and transparency
         marker.color.a = 1.0

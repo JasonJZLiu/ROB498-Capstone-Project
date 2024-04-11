@@ -245,7 +245,7 @@ class WaypointController:
             )
             
             if pos_error < Configs.waypoint_pos_tol and rot_error < Configs.waypoint_rot_tol:
-                rospy.loginfo("Current waypoint reached.") 
+                # rospy.loginfo("Current waypoint reached.") 
                 if len(self.waypoint_queue) > 0:
                     self.current_waypoint = self.waypoint_queue.pop(0)
                     rospy.loginfo("Setting the next waypoint.")

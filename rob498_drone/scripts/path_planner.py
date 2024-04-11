@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
 import rospy
-from geometry_msgs.msg import PoseStamped, TransformStamped, PoseArray, Point, Pose
+from geometry_msgs.msg import PoseStamped, Pose
 from visualization_msgs.msg import Marker
 from nav_msgs.msg import Path
 from sensor_msgs.msg import PointCloud2
 import sensor_msgs.point_cloud2 as pc2
+
 from rob498_drone.srv import AStarService, AStarServiceResponse
 from rob498_drone.srv import WaypointEnqueueService
-from std_srvs.srv import Empty, EmptyResponse
+from std_srvs.srv import Empty
 
-from configs import Configs
 import numpy as np
 
+from configs import Configs
 from a_star import a_star, find_closest_free_grid
 
 
@@ -40,7 +41,6 @@ class PathPlanner:
         self.pose_sub = rospy.Subscriber("mavros/local_position/pose", PoseStamped, callback=self._pose_callback)
 
         rospy.Service("path_planner/run_astar", AStarService, self._handle_astar_srv)
-
 
         self.safe_target_point_marker_pub = rospy.Publisher('/project_safe_target_point_marker', Marker, queue_size=10)
         self.waypoint_path_publisher = rospy.Publisher('/project_waypoint_path', Path, queue_size=10)
@@ -88,6 +88,7 @@ class PathPlanner:
 
         # mark each obstacle in the grid
         for idx in adjusted_indices:
+            # add an offset to add a safety margin to the obstacles
             for offset in [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]:
                 grid[tuple(idx + np.asarray(offset))] = 1
 
@@ -100,9 +101,9 @@ class PathPlanner:
         min_height_idx_adjusted = self.min_height_idx - min_indices[2]
         if min_height_idx_adjusted > 0:
             grid[:, :, 0:min_height_idx_adjusted] = 1
-        
 
-        # search for a free grid idx closest to target_point
+                
+        # search for a free grid idx closest to target_point using BFS
         target_idx_adjusted = target_idx - min_indices
         safe_target_idx_adjusted = find_closest_free_grid(grid, target_idx_adjusted)
         if safe_target_idx_adjusted is None:
@@ -150,7 +151,6 @@ class PathPlanner:
             waypoint_list.append(waypoint_pose_stamped)
             waypoint_path.poses.append(waypoint_pose_stamped)
             
-
         self.waypoint_clear_client()
         self.waypoint_enqueue_client(waypoint_list)
 
@@ -160,7 +160,6 @@ class PathPlanner:
         return AStarServiceResponse(success=True, message="PathPlanner A* Service Processed Successfully!")
 
 
-
     def odom_pos_to_idx(self, pos):
         pos /= self.resolution
         idx = np.round(pos).astype(int)
@@ -168,11 +167,9 @@ class PathPlanner:
 
 
     def adjusted_idx_to_odom_pos(self, adjusted_idx, min_indices):
-        # TODO: make this vectorized
         idx = (adjusted_idx + min_indices).astype(float)
         odom_pos = idx * self.resolution + self.resolution/2
         return odom_pos
-
 
 
     def visualize_occupancy_grid(self, grid, min_indices):
@@ -202,11 +199,10 @@ class PathPlanner:
         plt.show()
     
 
-
     def visualize_safe_target_point(self, target_point):
         # visualization
         marker = Marker()
-        marker.header.frame_id = "world"  # Adjust based on your TF frames
+        marker.header.frame_id = "world"
         marker.header.stamp = rospy.Time.now()
         marker.ns = "spheres"
         marker.id = 0
@@ -218,13 +214,13 @@ class PathPlanner:
         marker.pose.orientation.w = 1.0
         
         # Size of the sphere
-        sphere_diameter = 0.2  # Adjust the size of the sphere here
-        marker.scale.x = sphere_diameter  # Diameter of the sphere in X direction
-        marker.scale.y = sphere_diameter  # Diameter of the sphere in Y direction
-        marker.scale.z = sphere_diameter  # Diameter of the sphere in Z direction
+        sphere_diameter = 0.2
+        marker.scale.x = sphere_diameter 
+        marker.scale.y = sphere_diameter
+        marker.scale.z = sphere_diameter
         
         # Color and transparency
-        marker.color.a = 1.0  # Don't forget to set the alpha!
+        marker.color.a = 1.0
         marker.color.r = 0.0
         marker.color.g = 1.0
         marker.color.b = 0.0
