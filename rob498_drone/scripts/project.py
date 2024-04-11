@@ -4,6 +4,7 @@ import rospy
 from geometry_msgs.msg import PoseStamped, TransformStamped, PoseArray, Point
 from std_srvs.srv import Empty, EmptyResponse
 from visualization_msgs.msg import Marker
+from nav_msgs.msg import Path
 
 from configs import Configs
 from rob498_drone.srv import AStarService
@@ -56,7 +57,8 @@ class Project:
 
 
         self.target_point_marker_pub = rospy.Publisher('/project_target_point_marker', Marker, queue_size=10)
-
+        self.safe_target_point_marker_pub = rospy.Publisher('/project_safe_target_point_marker', Marker, queue_size=10)
+        self.waypoint_path_publisher = rospy.Publisher('/project_waypoint_path', Path, queue_size=10)
 
      
     def _pose_callback(self, pose_stamped):
@@ -126,14 +128,33 @@ class Project:
             self.enable_path_planner = False
             self.waypoint_clear_client()
             self.waypoint_enqueue_client(waypoint_list)
+            self.clear_visualization()
+            
+
+
         elif teleop_command == "x":
             self.enable_path_planner = False
             self.waypoint_clear_client()
+            self.clear_visualization()
         else:
             self.enable_path_planner = True
 
 
         return ProjectTeleopServiceResponse(success=True)
+
+
+    def clear_visualization(self):
+        marker = Marker()
+        marker.header.frame_id = "world"  # Same frame_id as the original marker
+        marker.ns = "spheres"  # Same namespace as the original marker
+        marker.id = 0  # Same ID as the original marker
+        marker.action = Marker.DELETE  # Action to delete the marker
+        self.safe_target_point_marker_pub.publish(marker)
+
+        empty_path = Path()
+        empty_path.header.frame_id = "world"
+        empty_path.header.stamp = rospy.Time.now()
+        self.waypoint_path_publisher.publish(empty_path)
 
 
 
@@ -158,7 +179,7 @@ class Project:
         marker.scale.z = sphere_diameter  # Diameter of the sphere in Z direction
         
         # Color and transparency
-        marker.color.a = 1.0  # Don't forget to set the alpha!
+        marker.color.a = 1.0
         marker.color.r = 1.0
         marker.color.g = 0.0
         marker.color.b = 0.0

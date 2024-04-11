@@ -13,141 +13,7 @@ from std_srvs.srv import Empty, EmptyResponse
 from configs import Configs
 import numpy as np
 
-
-
-# from queue import PriorityQueue
-
-# class Node:
-#     def __init__(self, position: tuple, parent: tuple):
-#         self.position = position
-#         self.parent = parent
-#         self.g = np.inf
-#         self.h = np.inf
-#         self.f = np.inf
-
-#     def __lt__(self, other):
-#         return self.f < other.f
-    
-
-# def a_star(grid, start, goal):
-#     # Create start and goal nodes
-#     start_node = Node(start, None)
-#     goal_node = Node(goal, None)
-    
-#     # Initialize both open and closed list
-#     open_list = PriorityQueue()
-#     open_list.put((start_node.f, start_node))
-#     closed_list = set()
-    
-#     # Loop until you find the end
-#     while not open_list.empty():
-#         # Get the current node
-#         current_f, current_node = open_list.get()
-#         closed_list.add(current_node.position)
-        
-#         # Found the goal
-#         if current_node.position == goal_node.position:
-#             path = []
-#             while current_node is not None:
-#                 path.append(current_node.position)
-#                 current_node = current_node.parent
-#             # Return reversed path
-#             return path[::-1]  
-        
-#         # Generate children
-#         for new_position in [(0, -1, 0), (0, 1, 0), (-1, 0, 0), (1, 0, 0), (0, 0, 1), (0, 0, -1),  # Adjacent cells
-#                              (-1, -1, 0), (-1, 1, 0), (1, -1, 0), (1, 1, 0),  # Diagonals on the same level
-#                              (0, -1, 1), (0, 1, 1), (-1, 0, 1), (1, 0, 1), (0, -1, -1), (0, 1, -1), (-1, 0, -1), (1, 0, -1),  # Vertical movements
-#                              (-1, -1, 1), (-1, 1, 1), (1, -1, 1), (1, 1, 1), (-1, -1, -1), (-1, 1, -1), (1, -1, -1), (1, 1, -1)]:  # Diagonal movements in 3D
-#             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1], current_node.position[2] + new_position[2])
-            
-#             # Make sure within range
-#             if node_position not in grid:
-#                 continue
-            
-#             # Create new node
-#             new_node = Node(node_position, current_node)
-            
-#             # Child is on the closed list
-#             if new_node.position in closed_list:
-#                 continue
-            
-#             # Create the f, g, and h values
-#             new_node.g = current_node.g + np.linalg.norm(np.array(node_position) - np.array(current_node.position))
-#             new_node.h = np.linalg.norm(np.array(goal_node.position) - np.array(new_node.position))
-#             new_node.f = new_node.g + new_node.h
-            
-#             # Child is already in the open list
-#             for open_node_f, open_node in open_list.queue:
-#                 if new_node == open_node and new_node.g > open_node.g:
-#                     continue
-            
-#             # Add the child to the open list
-#             open_list.put((new_node.f, new_node))
-
-#      # Path not found
-#     return None 
-
-
-
-import heapq
-def heuristic(a, b):
-    """
-    Compute the Manhattan distance between two points in a 3D grid.
-    """
-    return abs(a[0] - b[0]) + abs(a[1] - b[1]) + abs(a[2] - b[2])
-
-
-def get_neighbors(node, grid):
-    """
-    Generate all possible neighbors for a given node in a 3D grid,
-    excluding those with obstacles or outside the grid boundaries.
-    """
-    neighbors = []
-    for dz in [-1, 0, 1]:
-        for dy in [-1, 0, 1]:
-            for dx in [-1, 0, 1]:
-                if dz == 0 and dy == 0 and dx == 0:
-                    continue  # Skip the current node itself
-                new_x, new_y, new_z = node[0] + dx, node[1] + dy, node[2] + dz
-                if 0 <= new_x < grid.shape[0] and 0 <= new_y < grid.shape[1] and 0 <= new_z < grid.shape[2]:
-                    if grid[new_x, new_y, new_z] == 0:  # No obstacle
-                        neighbors.append((new_x, new_y, new_z))
-    return neighbors
-
-
-def a_star(grid, start, goal):
-    """
-    Perform A* search to find a path from start to goal in a 3D grid.
-    """
-    start, goal = tuple(start), tuple(goal)  # Convert to tuples
-    open_set = []
-    heapq.heappush(open_set, (0 + heuristic(start, goal), 0, start))
-    came_from = {}
-    g_score = {start: 0}
-    f_score = {start: heuristic(start, goal)}
-
-    while open_set:
-        _, current_g, current = heapq.heappop(open_set)
-
-        if current == goal:
-            path = []
-            while current in came_from:
-                path.append(current)
-                current = came_from[current]
-            return path[::-1]  # Reverse the path
-
-        for neighbor in get_neighbors(current, grid):
-            tentative_g_score = g_score[current] + 1  # Assuming cost = 1 for any move
-            if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
-                came_from[neighbor] = current
-                g_score[neighbor] = tentative_g_score
-                f_score[neighbor] = g_score[neighbor] + heuristic(neighbor, goal)
-                if neighbor not in [i[2] for i in open_set]:
-                    heapq.heappush(open_set, (f_score[neighbor], g_score[neighbor], neighbor))
-
-    # Return None if there is no path
-    return None  
+from a_star import a_star
 
 
 
@@ -188,7 +54,7 @@ class PathPlanner:
         self.drone_position_idx = self.odom_pos_to_idx(drone_position)
 
 
- 
+
     def _handle_astar_srv(self, req):
         target_point = np.array([req.target_point.x, req.target_point.y, req.target_point.z])
         target_idx = self.odom_pos_to_idx(target_point)
@@ -212,6 +78,7 @@ class PathPlanner:
         # Mark each obstacle in the grid
         for idx in adjusted_indices:
             for offset in [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]:
+                        #    [2, 0, 0], [-2, 0, 0], [0, 2, 0], [0, -2, 0], [0, 0, 2], [0, 0, -2]]:
                 grid[tuple(idx + np.asarray(offset))] = 1
         
 
@@ -222,6 +89,7 @@ class PathPlanner:
         if safe_target_idx_adjusted is None:
             print("CANNOT FIND A VALID SAFE TARGET")
             self.waypoint_clear_client()
+            self.clear_path_visualization()
             return AStarServiceResponse(success=False, message="CANNOT FIND A VALID SAFE TARGET")
 
 
@@ -236,13 +104,16 @@ class PathPlanner:
         if adjusted_idx_path is None:
             print("CANNOT FIND A VALID PATH")
             self.waypoint_clear_client()
+            self.clear_path_visualization()
             return AStarServiceResponse(success=False, message="CANNOT FIND A VALID PATH") 
+        else:
+            print("FOUND A VALID PATH")
         
 
         waypoint_list = list()
 
         waypoint_path = Path()
-        waypoint_path.header.frame_id = "world"  # Or the appropriate frame ID for your application
+        waypoint_path.header.frame_id = "world"
         waypoint_path.header.stamp = rospy.Time.now()
 
         for i, adjusted_idx_waypoint in enumerate(adjusted_idx_path):
@@ -386,8 +257,13 @@ class PathPlanner:
         marker.color.b = 0.0
         
         self.safe_target_point_marker_pub.publish(marker)
-
-
+    
+    
+    def clear_path_visualization(self):
+        empty_path = Path()
+        empty_path.header.frame_id = "world"
+        empty_path.header.stamp = rospy.Time.now()
+        self.waypoint_path_publisher.publish(empty_path)
 
 
 

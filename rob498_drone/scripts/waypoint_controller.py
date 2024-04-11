@@ -15,12 +15,14 @@ from rob498_drone.srv import WaypointEnqueueService, WaypointEnqueueServiceRespo
 import copy
 
 from utils import *
+import threading
 
 
 class WaypointController:
     has_taken_off = False
 
     def __init__(self):
+        self.waypoint_queue_mutex = threading.Lock()
         self.tf_pub = tf2_ros.TransformBroadcaster()
 
         # subscribe to the current mavros state
@@ -132,13 +134,18 @@ class WaypointController:
 
 
     def _handle_waypoint_enqueue_srv(self, req):
+        self.waypoint_queue_mutex.acquire()
         self.waypoint_queue += [self.transform_waypoint_target(world_vicon_waypoint) for world_vicon_waypoint in req.poses]
-        self.current_waypoint = self.waypoint_queue[0]
+        if len(self.waypoint_queue) > 0:
+            self.current_waypoint = self.waypoint_queue[0]
+        self.waypoint_queue_mutex.release()
         return WaypointEnqueueServiceResponse(success=True, message="Waypoint Enqueue Processed successfully")
 
 
     def _handle_waypoint_clear_srv(self, req):
+        self.waypoint_queue_mutex.acquire()
         self.waypoint_queue = list()
+        self.waypoint_queue_mutex.release()
         return EmptyResponse()
 
 
@@ -183,20 +190,6 @@ class WaypointController:
         rospy.loginfo("Taking off drone.")
         self.current_waypoint = take_off_pose_transformed
         self.has_taken_off = True
-
-
-
-        # while(not rospy.is_shutdown()):
-        #     # target - current
-        #     pos_error, rot_error, _, _ = pose_error(
-        #         self.current_pose.pose, self.current_waypoint.pose, full_pose=False,
-        #     )
-        #     if pos_error < Configs.waypoint_pos_tol and rot_error < Configs.waypoint_rot_tol:
-        #         self.has_taken_off = True
-        #         break
-        
-        #     self.position_pub.publish(self.current_waypoint)
-        #     self.rate.sleep()
 
         rospy.loginfo("Take off pose reached.")
         return EmptyResponse()
@@ -256,7 +249,7 @@ class WaypointController:
                 if len(self.waypoint_queue) > 0:
                     self.current_waypoint = self.waypoint_queue.pop(0)
                     rospy.loginfo("Setting the next waypoint.")
-            
+
             # calculate sub_waypoint as current_pose + delta
             if pos_error > Configs.waypoint_pos_delta:
                 pos_diff = pos_diff / pos_error * Configs.waypoint_pos_delta
