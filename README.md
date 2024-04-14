@@ -46,13 +46,13 @@ Teleoperating a drone in a safe manner can be challenging, particularly in clutt
 ## Repository Overview:
 This repository contains the source code for both the Gazebo simulation and real-world deployment used for this project.
 
-### Running the Simulation:
+### Running the Simulation
 ```bash
 bash bash_scripts/tasks/setup_laptop_sim.sh
 roslaunch rob498_drone project_teleop_sim.launch
 ```
 
-### Real-World Deployment:
+### Real-World Deployment
 For the onboard Jetson Nano:
 ```bash
 bash bash_scripts/setup_jetson_project.sh
@@ -65,6 +65,10 @@ bash bash_scripts/setup_laptop_project.sh JETSONS_IP_ADDRESS
 roslaunch rob498_drone project_laptop.launch
 ```
 
+## Drone Hardware Repositories
+https://github.com/utiasSTARS/ROB498-support
+
+https://github.com/utiasSTARS/ROB498-flight
 
 
 
