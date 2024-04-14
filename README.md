@@ -28,7 +28,7 @@ Teleoperating a drone in a safe manner can be challenging, particularly in clutt
 - Voxelizes point clouds from an Intel RealSense D435 camera using OctoMap, running onboard on a Jetson Nano at 2 Hz
 - Converts voxelized point clouds into 3D occupancy grids with an obstacle buffer range of 0.5 meters as well as an artificial ground and ceilling
 
-### Teleoperation Control Manager
+### Teleoperation Command Manager
 - Receives high-level teleoperation commands from the drone operator
 - Computes the desired target position based on the teleoperation command
 - Runs path-planning to compute a safe path towards the desired target position
