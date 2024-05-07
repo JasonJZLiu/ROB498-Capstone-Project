@@ -1,6 +1,5 @@
 # University of Toronto Engineering Science Robotics Capstone
 ## Project: Safe Drone Teleoperation with Real Time Mapping and Obstacle Avoidance 
-Jack Jiao, Jamie Zhang, Jason Liu, Maxim Radulovic, Rayan Hossain
 
 <img src="https://github.com/JasonJZLiu/ROB498_Capstone/assets/34286328/f1101a9f-74a0-483b-9881-820a2edf474d" width="805"/>
 
